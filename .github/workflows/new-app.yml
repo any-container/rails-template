@@ -1,0 +1,19 @@
+name: "New Rails App"
+on:
+  workflow_run:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      RAILS_ENV: test
+      DATABASE_URL: "postgres://rails:password@localhost:5432/rails_test"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install Ruby and gems
+        uses: ruby/setup-ruby@78c01b705fd9d5ad960d432d3a0cfa341d50e410 # v1.179.1
+        with:
+          bundler-cache: true
+
+      - name: Add rails
+        run: bin/rails new app-name-here
