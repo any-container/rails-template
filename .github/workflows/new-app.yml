@@ -1,6 +1,6 @@
 name: "New Rails App"
 on:
-  workflow_run:
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
