@@ -1,9 +1,9 @@
 name: "Build and Lint"
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "unmain" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "unmain" ]
 jobs:
   build:
     runs-on: ubuntu-latest
