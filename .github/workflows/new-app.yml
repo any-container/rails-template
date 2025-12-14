@@ -17,4 +17,4 @@ jobs:
       - name: Install Rails
         run: gem install rails
       - name: Add rails
-        run: bin/rails new app-name-here
+        run: rails new app-name-here
