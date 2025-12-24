@@ -25,5 +25,7 @@ jobs:
           bundler-cache: true
       - name: Install Rails
         run: gem install rails
+      - name: Install Postgres
+        run: gem install pg
       - name: Create new rails app
         run: rails new app-name-here
