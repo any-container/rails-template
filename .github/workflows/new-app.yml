@@ -16,4 +16,11 @@ jobs:
       - name: Install Postgres
         run: gem install pg
       - name: Create new rails app
-        run: rails new new-app --database=postgresql | tee new-app.out
+        run: rails new new-app | tee new-app.out
+      - name: Check for errors
+        run: |
+          if [ grep -i "error" new-app.out ]; then
+            echo "Error creating new rails app."
+            grep -i "error" new-app.out
+            exit 1
+          fi
