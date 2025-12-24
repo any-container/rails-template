@@ -16,4 +16,4 @@ jobs:
       - name: Install Postgres
         run: gem install pg
       - name: Create new rails app
-        run: rails new app-name-here --database=postgresql
+        run: rails new new-app --database=postgresql | tee new-app.out
