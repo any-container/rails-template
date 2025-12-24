@@ -2,7 +2,7 @@ name: "New Rails App"
 on:
   workflow_dispatch:
 jobs:
-  build-new-app:
+  build-postgres-app:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -16,10 +16,15 @@ jobs:
       - name: Install Postgres
         run: gem install pg
       - name: Create new rails app
-        run: rails new new-app --postgres | tee new-app.out
-      - name: Check for errors
+        run: rails new postgres-app --postgres | tee postgres-app.out
+        # TODO add force flag
+  verify:
+    runs-on: ubuntu-latest
+    needs: build-postgres-app
+    steps:
+      - name: Check for build errors
         run: |
-          if grep -i "error" new-app.out; then
+          if grep -i "error" postgres-app.out; then
             echo "Error creating new rails app."
             exit 1
           fi
