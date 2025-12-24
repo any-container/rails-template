@@ -2,7 +2,7 @@ name: "New Rails App"
 on:
   workflow_dispatch:
 jobs:
-  build:
+  build-new-app:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -25,5 +25,5 @@ jobs:
           bundler-cache: true
       - name: Install Rails
         run: gem install rails
-      - name: Add rails
+      - name: Create new rails app
         run: rails new app-name-here
