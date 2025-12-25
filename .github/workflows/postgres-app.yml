@@ -24,5 +24,9 @@ jobs:
             echo "Error creating new rails app."
             exit 1
           fi
+      - name: Create commit
+        run: |
+          git add -A
+          git commit -m "New rails default app w/ Postgres"
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
