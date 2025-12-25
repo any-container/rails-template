@@ -24,6 +24,9 @@ jobs:
             echo "Error creating new rails app."
             exit 1
           fi
+      - name: Remove nested git repo
+        run: |
+          rm -rf postgres-app/.git
       - name: Create commit
         run: |
           git add -A
