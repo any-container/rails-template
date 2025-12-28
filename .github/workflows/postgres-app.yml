@@ -27,13 +27,10 @@ jobs:
             echo "Error creating new rails app."
             exit 1
           fi
+          rm postgres-app.out
       - name: Remove nested git repo
         run: |
           rm -rf postgres-app/.git
-      - name: Create commit
-        run: |
-          git config user.name 'Thom Baynes'
-          git config user.email 'thombaynes@users.noreply.github.com'
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
