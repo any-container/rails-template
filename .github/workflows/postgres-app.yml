@@ -8,8 +8,6 @@ jobs:
   build-postgres-app:
     runs-on: ubuntu-latest
     steps:
-      - name: Variable test
-        run: echo ${{ vars.ANYTHING }}
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Install Ruby and gems
@@ -36,8 +34,6 @@ jobs:
         run: |
           git config user.name 'Thom Baynes'
           git config user.email 'thombaynes@users.noreply.github.com'
-          git add -A
-          git commit -m "New rails default app w/ Postgres"
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
