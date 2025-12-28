@@ -38,3 +38,5 @@ jobs:
           git commit -m "New rails default app w/ Postgres"
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
