@@ -1,10 +1,12 @@
 name: "New Rails App (w/ Postgres)"
 on:
   workflow_dispatch:
+  # TODO run early every morning
 permissions:
   contents: write
   pull-requests: write
 jobs:
+  # TODO split this up for faster retries?
   build-postgres-app:
     runs-on: ubuntu-latest
     steps:
@@ -35,3 +37,5 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.PAT_TOKEN }}
+          # TODO have a dynamic branch name based on the date
+          # TODO have dynamic PR description content that contains a summary of the changes
