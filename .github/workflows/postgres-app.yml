@@ -25,9 +25,12 @@ jobs:
       - name: Install Postgres
         run: |
           gem install pg
+      - name: Remove existing app
+        run: |
+          rm -rf postgres-app/*
       - name: Create new rails app
         run: |
-          rails new tmp --database=postgresql --force | tee postgres-app.out
+          rails new postgres-app --database=postgresql --force | tee postgres-app.out
         # TODO switch to rspec and add --skip-test-unit here
       - name: Check for build errors
         run: |
@@ -36,12 +39,9 @@ jobs:
             exit 1
           fi
           rm postgres-app.out
-      - name: Clear existing postgres-app, then move newly built one in place
+      - name: Remove nested git repo
         run: |
-          rm -rf postgres-app/*
-          rm -rf tmp/.git
-          mv -f tmp/* postgres-app
-          rm -rf tmp
+          rm -rf postgres-app/.git
       - name: Get current date (for use in PR)
         id: date
         run: |
