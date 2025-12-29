@@ -39,9 +39,12 @@ jobs:
             exit 1
           fi
           rm postgres-app.out
-      - name: Remove nested git repo
+      - name: Remove nested git repo so we can commit
         run: |
           rm -rf postgres-app/.git
+      - name: Remove encrypted credentials to prevent a new PR
+        run: |
+          rm postgres-app/config/credentials.yml.enc
       - name: Get current date (for use in PR)
         id: date
         run: |
