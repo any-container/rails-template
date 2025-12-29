@@ -38,7 +38,7 @@ jobs:
       - name: Remove nested git repo, and move to postgres-app folder
         run: |
           rm -rf tmp/.git
-          mv -f tmp/* postgres-app/*
+          mv -rf tmp/* postgres-app/*
       - name: Get current date (for use in PR)
         id: date
         run: |
