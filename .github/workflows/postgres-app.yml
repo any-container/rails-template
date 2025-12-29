@@ -22,8 +22,8 @@ jobs:
       - name: Install Postgres
         run: gem install pg
       - name: Create new rails app
-        run: rails new postgres-app --postgres | tee postgres-app.out
-        # TODO add force flag to include new changes
+        run: rails new postgres-app --postgres --force | tee postgres-app.out
+        # TODO switch to rspec and add --skip-test-unit here
       - name: Check for build errors
         run: |
           if grep -i "error" postgres-app.out; then
