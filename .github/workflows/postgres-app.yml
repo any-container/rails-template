@@ -35,10 +35,11 @@ jobs:
             exit 1
           fi
           rm postgres-app.out
-      - name: Remove nested git repo, and move to postgres-app folder
+      - name: Clear existing postgres-app, then move newly built one in place
         run: |
+          rm -rf postgres-app/*
           rm -rf tmp/.git
-          mv -rf tmp/* postgres-app/*
+          mv -f tmp/* postgres-app/*
       - name: Get current date (for use in PR)
         id: date
         run: |
