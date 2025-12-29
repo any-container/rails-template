@@ -19,11 +19,14 @@ jobs:
         with:
           bundler-cache: true
       - name: Install Rails
-        run: gem install rails
+        run: |
+          gem install rails
       - name: Install Postgres
-        run: gem install pg
+        run: |
+          gem install pg
       - name: Create new rails app
-        run: rails new postgres-app --database=postgresql --force | tee postgres-app.out
+        run: |
+          rails new postgres-app --database=postgresql --force | tee postgres-app.out
         # TODO switch to rspec and add --skip-test-unit here
       - name: Check for build errors
         run: |
