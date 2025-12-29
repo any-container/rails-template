@@ -15,7 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Install Ruby and gems
-        uses: ruby/setup-ruby@78c01b705fd9d5ad960d432d3a0cfa341d50e410 # v1.179.1
+        uses: ruby/setup-ruby@v1.276.0
         with:
           bundler-cache: true
       - name: Install Rails
@@ -26,7 +26,7 @@ jobs:
           gem install pg
       - name: Create new rails app
         run: |
-          rails new postgres-app --database=postgresql --force | tee postgres-app.out
+          rails new tmp --database=postgresql --force | tee postgres-app.out
         # TODO switch to rspec and add --skip-test-unit here
       - name: Check for build errors
         run: |
@@ -35,10 +35,11 @@ jobs:
             exit 1
           fi
           rm postgres-app.out
-      - name: Remove nested git repo
+      - name: Remove nested git repo, and move to postgres-app folder
         run: |
-          rm -rf postgres-app/.git
-      - name: Get current date
+          rm -rf tmp/.git
+          mv -f tmp/* postgres-app/*
+      - name: Get current date (for use in PR)
         id: date
         run: |
           echo "builddate=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
