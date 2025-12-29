@@ -13,5 +13,5 @@ jobs:
         run: |
           echo $DEBUG
         env:
-          DEBUG: ${{ steps.version.outputs.builddate }}-DEBUG
-          RELEASE: ${{  steps.version.outputs.builddate }}-RELEASE
+          DEBUG: ${{ steps.date.outputs.builddate }}-DEBUG
+          RELEASE: ${{  steps.date.outputs.builddate }}-RELEASE
