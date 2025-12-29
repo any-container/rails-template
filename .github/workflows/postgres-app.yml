@@ -38,5 +38,5 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.PAT_TOKEN }} # Needs read/write for PRs and repo content
-          branch: $(date +'%Y%m%d')-rails-changes
+          branch: ${{ github.event.repository.updated_at}}
           # TODO have dynamic PR description content that contains a summary of the changes
