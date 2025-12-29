@@ -39,7 +39,8 @@ jobs:
         run: |
           rm -rf postgres-app/*
           rm -rf tmp/.git
-          mv tmp postgres-app
+          mkdir postgres-app
+          mv -f tmp/* postgres-app/*
       - name: Get current date (for use in PR)
         id: date
         run: |
