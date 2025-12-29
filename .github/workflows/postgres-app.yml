@@ -2,7 +2,7 @@ name: "New Rails App (w/ Postgres)"
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 7 * * *"
+    - cron: "0 17 * * *"
 permissions:
   contents: write
   pull-requests: write
