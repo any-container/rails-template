@@ -5,5 +5,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: test
-        run: echo $(date +'%Y-%m-%dT%H:%M:%S')
+      - name: Get current date
+        id: date
+        run: |
+          echo "{date}={$(date +'%Y-%m-%d')}" >> $GITHUB_OUTPUT
+      - name: Test with environment variables
+        run: echo $TAG_NAME - $RELEASE_NAME
+        env:
+          TAG_NAME: nightly-tag-${{ env.date }}
+          RELEASE_NAME: nightly-release-${{ env.date }}
