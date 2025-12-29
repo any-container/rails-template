@@ -43,5 +43,5 @@ jobs:
         with:
           token: ${{ secrets.PAT_TOKEN }} # Needs read/write for PRs and repo content
           branch: ${{ steps.date.outputs.builddate }}-changes
-          name: ${{ steps.date.outputs.builddate }} changes
+          title: ${{ steps.date.outputs.builddate }} changes
           # TODO have dynamic PR description content that contains a summary of the changes
