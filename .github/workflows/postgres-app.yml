@@ -37,6 +37,6 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
-          token: ${{ secrets.PAT_TOKEN }}
-          # TODO have a dynamic branch name based on the date
+          token: ${{ secrets.PAT_TOKEN }} # Needs read/write for PRs and repo content
+          branch: date +'%Y-%m-%d'
           # TODO have dynamic PR description content that contains a summary of the changes
