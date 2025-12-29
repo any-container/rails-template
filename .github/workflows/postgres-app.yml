@@ -1,7 +1,8 @@
 name: "New Rails App (w/ Postgres)"
 on:
   workflow_dispatch:
-  # TODO run early every morning
+  schedule:
+    - cron: "0 7 * * *"
 permissions:
   contents: write
   pull-requests: write
