@@ -42,6 +42,6 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.PAT_TOKEN }} # Needs read/write for PRs and repo content
-          branch: ${{ steps.date.outputs.builddate }}-changes
-          title: ${{ steps.date.outputs.builddate }} changes
+          branch: ${{ steps.date.outputs.builddate }}-postgres-app-changes
+          title: ${{ steps.date.outputs.builddate }} postgres-app changes
           # TODO have dynamic PR description content that contains a summary of the changes
