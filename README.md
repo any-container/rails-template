@@ -5,6 +5,9 @@ TODO - Deployment
 * Add terraform code for basic AWS infra https://pabluc.medium.com/deploying-with-kamal-on-aws-ec2-ecr-and-cloudwatch-terraform-for-iasc-723ce666d661
 * Kamal bits and pieces from above - going to take some practice
 
+TODO - AWS
+* Proper authentication of some kind from here https://docs.aws.amazon.com/STS/latest/APIReference/API_Operations.html
+
 TODO - Maintenance
 * Terraform updates
 * Rails updates
