@@ -1,9 +1,8 @@
 TODO - Deployment
+* Troubleshoot failing workflow - it's not finding the main.tf and terraform.tf files
 * Create dynamodb in AWS for terraform state
-* Add terraform init workflow that makes a new terraform state file in the dynamodb
-** Add AWS as terraform provider with secrets above
-** Add terraform code for basic AWS infra https://pabluc.medium.com/deploying-with-kamal-on-aws-ec2-ecr-and-cloudwatch-terraform-for-iasc-723ce666d661
-* Deploy with Kamal bits and pieces from above - going to take some practice
+* Push the terraform repo to dynamodb
+* Add Kamal bits from this - https://pabluc.medium.com/deploying-with-kamal-on-aws-ec2-ecr-and-cloudwatch-terraform-for-iasc-723ce666d661
 
 TODO - AWS
 * Proper authentication of some kind from here https://docs.aws.amazon.com/STS/latest/APIReference/API_Operations.html
