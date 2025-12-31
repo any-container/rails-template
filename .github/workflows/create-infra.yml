@@ -26,6 +26,8 @@ jobs:
       - name: Go to correct infra directory
         run: |
           cd infra/postgres-app
+          pwd
+          ls -la
       - name: terraform init
         run: |
           terraform init
