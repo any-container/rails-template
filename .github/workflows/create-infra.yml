@@ -1,0 +1,16 @@
+name: "Create infra via TF"
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  terraform-init:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+    # install terraform
+    # Run terraform init
+      - name: terraform init
+        run: |
+          terraform init
