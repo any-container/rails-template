@@ -1,10 +1,10 @@
-name: "Create infra via TF"
+name: "Create infra via TF for postgres-app"
 on:
   workflow_dispatch:
 permissions:
   contents: write
 jobs:
-  terraform-init:
+  fresh-terraform-for-postgres-app:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -23,6 +23,15 @@ jobs:
         run: |
           sudo apt update
           sudo apt-get install terraform
+      - name: Go to correct infra directory
+        run: |
+          cd infra/postgres-app
       - name: terraform init
         run: |
           terraform init
+      - name: terraform validate
+        run: |
+          terraform validate
+      - name: terraform apply
+        run: |
+          terraform apply
