@@ -9,16 +9,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
-      - name: Go to the infra directory
-        run: |
-          cd infra/postgres-app
       - name: Terraform fmt
         run: |
           terraform fmt -check
         continue-on-error: true
       - name: Terraform Init
         run: |
-          terraform init -input=false
+          terraform init -input=false -chdir=infra/postgres-app
       - name: Terraform Validate
         run: |
           terraform validate -no-color
