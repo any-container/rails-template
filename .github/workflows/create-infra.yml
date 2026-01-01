@@ -10,13 +10,14 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
       - name: Terraform fmt
         run: |
-          terraform --chdir=infra/postgres-app fmt -check
+          terraform -chdir=infra/postgres-app fmt -check
       - name: Terraform Init
         run: |
-          terraform --chdir=infra/postgres-app init -input=false
+          terraform -chdir=infra/postgres-app init -input=false
       - name: Terraform Validate
         run: |
-          terraform --chdir=infra/postgres-app validate -no-color
+          terraform -chdir=infra/postgres-app validate -no-color
       - name: Terraform Apply
         id: apply
-        run: terraform --chdir=infra/postgres-app apply -no-color -input=false
+        run: |
+          terraform -chdir=infra/postgres-app apply -no-color -input=false
