@@ -1,7 +1,7 @@
 name: "Create infra via TF for postgres-app"
 on:
   workflow_dispatch:
-permissions: read-all
+permissions: write-all
 jobs:
   fresh-terraform-for-postgres-app:
     runs-on: ubuntu-latest
