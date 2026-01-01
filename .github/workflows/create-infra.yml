@@ -19,15 +19,15 @@ jobs:
             --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg \
             --fingerprint
           echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-      - name: Update and install terraform
-        run: |
-          sudo apt update
-          sudo apt-get install terraform
       - name: Go to correct infra directory
         run: |
           cd infra/postgres-app
           pwd
           ls -la
+      - name: Update and install terraform
+        run: |
+          sudo apt update
+          sudo apt-get install terraform
       - name: terraform init
         run: |
           terraform init
