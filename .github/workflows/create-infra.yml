@@ -1,7 +1,12 @@
+# AWS OIDC authorization built by hand elsewhere using these guides
+# https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-aws
+# https://github.com/aws-actions/configure-aws-credentials?tab=readme-ov-file#oidc-configuration
 name: "Create infra via TF for postgres-app"
 on:
   workflow_dispatch:
-permissions: write-all
+permissions:
+  contents: write
+  id-token: write
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -11,11 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Configure AWS Credentials
-        # Use aws-actions/configure-aws-credentials for robust credential handling
-        # It's recommended to use OIDC where possible for enhanced security
         uses: aws-actions/configure-aws-credentials@v4
         with:
+          audience: sts.amazonaws.com.cn
           aws-region: us-west-2
+          role-to-assume: arn:aws:iam::530245975994:role/oidc-rails-template
       - uses: hashicorp/setup-terraform@v3
       - name: Terraform fmt
         run: |
