@@ -7,9 +7,6 @@ on:
 permissions:
   contents: write
   id-token: write
-env:
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 jobs:
   fresh-terraform-for-postgres-app:
     runs-on: ubuntu-latest
@@ -18,7 +15,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          audience: sts.amazonaws.com.cn
+          audience: sts.amazonaws.com
           aws-region: us-west-2
           role-to-assume: arn:aws:iam::530245975994:role/oidc-rails-template
       - uses: hashicorp/setup-terraform@v3
