@@ -2,6 +2,9 @@ name: "Create infra via TF for postgres-app"
 on:
   workflow_dispatch:
 permissions: write-all
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 jobs:
   fresh-terraform-for-postgres-app:
     runs-on: ubuntu-latest
@@ -12,8 +15,6 @@ jobs:
         # It's recommended to use OIDC where possible for enhanced security
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
       - uses: hashicorp/setup-terraform@v3
       - name: Terraform fmt
