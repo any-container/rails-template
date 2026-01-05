@@ -52,6 +52,6 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
-          token: ${{ secrets.GITHUB_TOKEN }} # Needs read/write for PRs and repo content
+          token: ${{ secrets.PAT_TOKEN }} # Needs read/write for PRs and repo content
           branch: ${{ steps.date.outputs.builddate }}-postgres-app-changes
           title: ${{ steps.date.outputs.builddate }} postgres-app changes
