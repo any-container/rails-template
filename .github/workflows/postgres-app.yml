@@ -1,6 +1,7 @@
 name: "Vanilla Rails w/ Postgres"
 on:
   workflow_dispatch:
+  pull_request:
   schedule:
     - cron: "0 17 * * *"
 permissions:
@@ -114,6 +115,8 @@ jobs:
 
   create-pr:
     needs: create-app
+    # Only validate app generation on PRs; don't open a PR from a PR
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     steps:
       # Generate the short-lived installation token
