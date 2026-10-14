@@ -84,6 +84,18 @@ jobs:
       - name: Remove encrypted credentials to prevent a new PR
         run: |
           rm postgres-app/config/credentials.yml.enc
+      - name: Verify removed files are gone
+        run: |
+          failed=0
+          if [ -e postgres-app/.git ]; then
+            echo "Verification failed: postgres-app/.git still exists."
+            failed=1
+          fi
+          if [ -e postgres-app/config/credentials.yml.enc ]; then
+            echo "Verification failed: postgres-app/config/credentials.yml.enc still exists."
+            failed=1
+          fi
+          exit $failed
       - name: Upload app artifact
         uses: actions/upload-artifact@v4
         with:
