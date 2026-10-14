@@ -13,6 +13,13 @@ jobs:
   build-postgres-app:
     runs-on: ubuntu-latest
     steps:
+      # Generate the short-lived installation token
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Install Ruby and gems
@@ -52,6 +59,6 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
-          token: ${{ secrets.PAT_TOKEN }} # Needs read/write for PRs and repo content
+          token: ${{ steps.app-token.outputs.token }} # Needs read/write for PRs and repo content
           branch: ${{ steps.date.outputs.builddate }}-postgres-app-changes
           title: ${{ steps.date.outputs.builddate }} postgres-app changes
