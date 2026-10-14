@@ -9,7 +9,7 @@ permissions:
   id-token: write
 jobs:
   fresh-terraform-for-postgres-app:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - name: Configure AWS Credentials
