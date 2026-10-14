@@ -65,8 +65,7 @@ jobs:
           gem install pg
       - name: Create new rails app
         run: |
-          rails new postgres-app --database=postgresql --force | tee postgres-app.out
-        # TODO switch to rspec and add --skip-test-unit here
+          rails new postgres-app --database=postgresql --api --skip-test --force | tee postgres-app.out
       - name: Check for build errors
         run: |
           if grep -i "error" postgres-app.out; then
@@ -78,6 +77,15 @@ jobs:
             exit 1
           fi
           rm postgres-app.out
+      - name: Install RSpec
+        working-directory: postgres-app
+        run: |
+          bundle add rspec-rails --group "development,test"
+          bin/rails generate rspec:install
+          if [ ! -f spec/rails_helper.rb ]; then
+            echo "RSpec was not installed."
+            exit 1
+          fi
       - name: Remove nested git repo so we can commit
         run: |
           rm -rf postgres-app/.git
