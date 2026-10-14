@@ -16,9 +16,9 @@ jobs:
       contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Install Ruby
-        uses: ruby/setup-ruby@v1.276.0
+        uses: ruby/setup-ruby@v1.329.0
       - name: Install Rails
         run: |
           gem install rails
@@ -29,7 +29,7 @@ jobs:
           echo "gemdir=$(gem env gemdir)" >> $GITHUB_OUTPUT
           echo "bindir=$(ruby -e 'puts Gem.bindir')" >> $GITHUB_OUTPUT
       - name: Cache installed gems
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: |
             ${{ steps.gems.outputs.gemdir }}
@@ -43,9 +43,9 @@ jobs:
       contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Install Ruby
-        uses: ruby/setup-ruby@v1.276.0
+        uses: ruby/setup-ruby@v1.329.0
       # gem install puts gems in gemdir but their executables (e.g. rails) in bindir
       - name: Get gem and bin directories
         id: gems
@@ -53,7 +53,7 @@ jobs:
           echo "gemdir=$(gem env gemdir)" >> $GITHUB_OUTPUT
           echo "bindir=$(ruby -e 'puts Gem.bindir')" >> $GITHUB_OUTPUT
       - name: Restore installed gems
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: |
             ${{ steps.gems.outputs.gemdir }}
@@ -97,7 +97,7 @@ jobs:
           fi
           exit $failed
       - name: Upload app artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: postgres-app
           path: postgres-app
@@ -116,12 +116,12 @@ jobs:
           client-id: ${{ vars.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Remove existing app
         run: |
           rm -rf postgres-app/*
       - name: Download app artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: postgres-app
           path: postgres-app
