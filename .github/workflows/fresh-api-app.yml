@@ -1,4 +1,4 @@
-name: "Vanilla Rails w/ Postgres"
+name: "Fresh API Rails App (w/ Postgresql & RSpec)"
 on:
   workflow_dispatch:
   pull_request:
