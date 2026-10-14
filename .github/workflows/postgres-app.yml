@@ -10,31 +10,51 @@ jobs:
   # Reference gist for rails new https://gist.github.com/eliotsykes/ace0222174804372b51a
   # TODO make a vanilla version of this that does plain `rails new`
   # TODO have them share GA code
-  build-postgres-app:
+  setup-rails:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      # Generate the short-lived installation token
-      - name: Generate GitHub App Token
-        id: app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ vars.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Install Ruby and gems
+      - name: Install Ruby
         uses: ruby/setup-ruby@v1.276.0
-        with:
-          bundler-cache: true
       - name: Install Rails
         run: |
           gem install rails
+      - name: Get gem directory
+        id: gems
+        run: |
+          echo "path=$(gem env gemdir)" >> $GITHUB_OUTPUT
+      - name: Cache installed gems
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ steps.gems.outputs.path }}
+          key: rails-gems-${{ runner.os }}-${{ github.run_id }}
+
+  create-app:
+    needs: setup-rails
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install Ruby
+        uses: ruby/setup-ruby@v1.276.0
+      - name: Get gem directory
+        id: gems
+        run: |
+          echo "path=$(gem env gemdir)" >> $GITHUB_OUTPUT
+      - name: Restore installed gems
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ steps.gems.outputs.path }}
+          key: rails-gems-${{ runner.os }}-${{ github.run_id }}
+          fail-on-cache-miss: true
       - name: Install Postgres
         run: |
           gem install pg
-      - name: Remove existing app
-        run: |
-          rm -rf postgres-app/*
       - name: Create new rails app
         run: |
           rails new postgres-app --database=postgresql --force | tee postgres-app.out
@@ -52,6 +72,35 @@ jobs:
       - name: Remove encrypted credentials to prevent a new PR
         run: |
           rm postgres-app/config/credentials.yml.enc
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: postgres-app
+          path: postgres-app
+          include-hidden-files: true
+          if-no-files-found: error
+
+  create-pr:
+    needs: create-app
+    runs-on: ubuntu-latest
+    steps:
+      # Generate the short-lived installation token
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Remove existing app
+        run: |
+          rm -rf postgres-app/*
+      - name: Download app artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: postgres-app
+          path: postgres-app
       - name: Get current date (for use in PR)
         id: date
         run: |
