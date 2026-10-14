@@ -11,7 +11,7 @@ jobs:
   # TODO make a vanilla version of this that does plain `rails new`
   # TODO have them share GA code
   setup-rails:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
@@ -38,7 +38,7 @@ jobs:
 
   create-app:
     needs: setup-rails
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
@@ -106,7 +106,7 @@ jobs:
 
   create-pr:
     needs: create-app
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       # Generate the short-lived installation token
       - name: Generate GitHub App Token
