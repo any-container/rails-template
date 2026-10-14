@@ -11,14 +11,14 @@ jobs:
   fresh-terraform-for-postgres-app:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           audience: sts.amazonaws.com
           aws-region: us-west-2
           role-to-assume: arn:aws:iam::530245975994:role/oidc-rails-template
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
       - name: Terraform fmt
         run: |
           terraform -chdir=infra/postgres-app fmt -check
