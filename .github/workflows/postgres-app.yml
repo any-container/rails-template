@@ -22,14 +22,18 @@ jobs:
       - name: Install Rails
         run: |
           gem install rails
-      - name: Get gem directory
+      # gem install puts gems in gemdir but their executables (e.g. rails) in bindir
+      - name: Get gem and bin directories
         id: gems
         run: |
-          echo "path=$(gem env gemdir)" >> $GITHUB_OUTPUT
+          echo "gemdir=$(gem env gemdir)" >> $GITHUB_OUTPUT
+          echo "bindir=$(ruby -e 'puts Gem.bindir')" >> $GITHUB_OUTPUT
       - name: Cache installed gems
         uses: actions/cache/save@v4
         with:
-          path: ${{ steps.gems.outputs.path }}
+          path: |
+            ${{ steps.gems.outputs.gemdir }}
+            ${{ steps.gems.outputs.bindir }}
           key: rails-gems-${{ runner.os }}-${{ github.run_id }}
 
   create-app:
@@ -42,14 +46,18 @@ jobs:
         uses: actions/checkout@v4
       - name: Install Ruby
         uses: ruby/setup-ruby@v1.276.0
-      - name: Get gem directory
+      # gem install puts gems in gemdir but their executables (e.g. rails) in bindir
+      - name: Get gem and bin directories
         id: gems
         run: |
-          echo "path=$(gem env gemdir)" >> $GITHUB_OUTPUT
+          echo "gemdir=$(gem env gemdir)" >> $GITHUB_OUTPUT
+          echo "bindir=$(ruby -e 'puts Gem.bindir')" >> $GITHUB_OUTPUT
       - name: Restore installed gems
         uses: actions/cache/restore@v4
         with:
-          path: ${{ steps.gems.outputs.path }}
+          path: |
+            ${{ steps.gems.outputs.gemdir }}
+            ${{ steps.gems.outputs.bindir }}
           key: rails-gems-${{ runner.os }}-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: Install Postgres
@@ -63,6 +71,10 @@ jobs:
         run: |
           if grep -i "error" postgres-app.out; then
             echo "Error creating new rails app."
+            exit 1
+          fi
+          if [ ! -f postgres-app/Gemfile ]; then
+            echo "Rails app was not generated."
             exit 1
           fi
           rm postgres-app.out
