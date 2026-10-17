@@ -1,9 +1,8 @@
-name: "Build and Lint"
+name: "Add Models and Schema"
 on:
-  push:
-    branches: [ "unmain" ]
-  pull_request:
-    branches: [ "unmain" ]
+  workflow_call:
+env:
+  APP_DIR: rails-api/postgres-rspec
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -16,6 +15,11 @@ jobs:
           POSTGRES_DB: rails_test
           POSTGRES_USER: rails
           POSTGRES_PASSWORD: password
+        options: >-
+          --health-cmd="pg_isready -U rails"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
     env:
       RAILS_ENV: test
       DATABASE_URL: "postgres://rails:password@localhost:5432/rails_test"
@@ -27,9 +31,21 @@ jobs:
         uses: ruby/setup-ruby@v1.329.0
         with:
           bundler-cache: true
-      # Add or replace database setup steps here
-      - name: Set up database schema
-        run: bin/rails db:schema:load
+          working-directory: ${{ env.APP_DIR }}
+      - name: Create database
+        working-directory: ${{ env.APP_DIR }}
+        run: bin/rails db:create
+      - name: Run migrations and dump schema
+        working-directory: ${{ env.APP_DIR }}
+        run: bin/rails db:migrate
+      - name: Verify schema.rb was generated
+        run: test -f "$APP_DIR/db/schema.rb"
+      - name: Upload schema
+        uses: actions/upload-artifact@v7
+        with:
+          name: schema
+          path: ${{ env.APP_DIR }}/db/schema.rb
+          if-no-files-found: error
       # Add or replace test runners here
       # - name: Run tests
       #   run: bin/rake
@@ -43,12 +59,17 @@ jobs:
         uses: ruby/setup-ruby@v1.329.0
         with:
           bundler-cache: true
+          working-directory: ${{ env.APP_DIR }}
       - name: Generate binstubs
+        working-directory: ${{ env.APP_DIR }}
         run: bundle binstubs bundler-audit brakeman rubocop
       # Add or replace any other lints here
       - name: Security audit dependencies
+        working-directory: ${{ env.APP_DIR }}
         run: bin/bundler-audit --update
       - name: Security audit application code
+        working-directory: ${{ env.APP_DIR }}
         run: bin/brakeman -q -w2
       - name: Lint Ruby files
+        working-directory: ${{ env.APP_DIR }}
         run: bin/rubocop --parallel
