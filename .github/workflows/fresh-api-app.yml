@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+    outputs:
+      rails_version: ${{ steps.rails.outputs.version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -23,6 +25,11 @@ jobs:
       - name: Install Rails
         run: |
           gem install rails
+      # Each Rails release gets its own folder: rails-api/postgres-rspec/<version>
+      - name: Get Rails version
+        id: rails
+        run: |
+          echo "version=$(rails -v | awk '{print $2}')" >> $GITHUB_OUTPUT
       # gem install puts gems in gemdir but their executables (e.g. rails) in bindir
       - name: Get gem and bin directories
         id: gems
@@ -42,6 +49,8 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+    env:
+      APP_DIR: rails-api/postgres-rspec/${{ needs.setup-rails.outputs.rails_version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -66,20 +75,20 @@ jobs:
           gem install pg
       - name: Create new rails app
         run: |
-          rails new rails-api/postgres-rspec --database=postgresql --api --skip-test --force | tee postgres-rspec.out
+          rails new "$APP_DIR" --database=postgresql --api --skip-test --force | tee postgres-rspec.out
       - name: Check for build errors
         run: |
           if grep -i "error" postgres-rspec.out; then
             echo "Error creating new rails app."
             exit 1
           fi
-          if [ ! -f rails-api/postgres-rspec/Gemfile ]; then
+          if [ ! -f $APP_DIR/Gemfile ]; then
             echo "Rails app was not generated."
             exit 1
           fi
           rm postgres-rspec.out
       - name: Install RSpec
-        working-directory: rails-api/postgres-rspec
+        working-directory: ${{ env.APP_DIR }}
         run: |
           bundle add rspec-rails --group "development,test"
           bin/rails generate rspec:install
@@ -89,35 +98,38 @@ jobs:
           fi
       - name: Remove nested git repo so we can commit
         run: |
-          rm -rf rails-api/postgres-rspec/.git
+          rm -rf $APP_DIR/.git
       - name: Remove encrypted credentials to prevent a new PR
         run: |
-          rm rails-api/postgres-rspec/config/credentials.yml.enc
+          rm $APP_DIR/config/credentials.yml.enc
       - name: Verify removed files are gone
         run: |
           failed=0
-          if [ -e rails-api/postgres-rspec/.git ]; then
-            echo "Verification failed: rails-api/postgres-rspec/.git still exists."
+          if [ -e $APP_DIR/.git ]; then
+            echo "Verification failed: $APP_DIR/.git still exists."
             failed=1
           fi
-          if [ -e rails-api/postgres-rspec/config/credentials.yml.enc ]; then
-            echo "Verification failed: rails-api/postgres-rspec/config/credentials.yml.enc still exists."
+          if [ -e $APP_DIR/config/credentials.yml.enc ]; then
+            echo "Verification failed: $APP_DIR/config/credentials.yml.enc still exists."
             failed=1
           fi
           exit $failed
       - name: Upload app artifact
         uses: actions/upload-artifact@v7
         with:
-          name: postgres-rspec
-          path: rails-api/postgres-rspec
+          name: postgres-rspec-${{ needs.setup-rails.outputs.rails_version }}
+          path: ${{ env.APP_DIR }}
           include-hidden-files: true
           if-no-files-found: error
 
   create-pr:
-    needs: create-app
+    needs: [setup-rails, create-app]
     # Only validate app generation on PRs; don't open a PR from a PR
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
+    env:
+      RAILS_VERSION: ${{ needs.setup-rails.outputs.rails_version }}
+      APP_DIR: rails-api/postgres-rspec/${{ needs.setup-rails.outputs.rails_version }}
     steps:
       # Generate the short-lived installation token
       - name: Generate GitHub App Token
@@ -128,14 +140,14 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: Checkout code
         uses: actions/checkout@v7
-      - name: Remove existing app
+      - name: Remove existing app for this Rails version
         run: |
-          rm -rf rails-api/postgres-rspec/*
+          rm -rf "$APP_DIR"
       - name: Download app artifact
         uses: actions/download-artifact@v8
         with:
-          name: postgres-rspec
-          path: rails-api/postgres-rspec
+          name: postgres-rspec-${{ needs.setup-rails.outputs.rails_version }}
+          path: ${{ env.APP_DIR }}
       - name: Get current date (for use in PR)
         id: date
         run: |
@@ -144,5 +156,5 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ steps.app-token.outputs.token }} # Needs read/write for PRs and repo content
-          branch: ${{ steps.date.outputs.builddate }}-postgres-rspec-changes
-          title: ${{ steps.date.outputs.builddate }} postgres-rspec changes
+          branch: ${{ steps.date.outputs.builddate }}-postgres-rspec-${{ env.RAILS_VERSION }}-changes
+          title: ${{ steps.date.outputs.builddate }} postgres-rspec changes (Rails ${{ env.RAILS_VERSION }})
