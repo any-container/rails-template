@@ -131,6 +131,9 @@ jobs:
     # Only validate app generation on PRs; don't open a PR from a PR
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
+    outputs:
+      pr_branch: ${{ steps.cpr.outputs.pull-request-branch }}
+      pr_operation: ${{ steps.cpr.outputs.pull-request-operation }}
     env:
       RAILS_VERSION: ${{ needs.setup-rails.outputs.rails_version }}
       APP_DIR: rails-api/postgres-rspec/${{ needs.setup-rails.outputs.rails_version }}
@@ -157,8 +160,20 @@ jobs:
         run: |
           echo "builddate=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
       - name: Create Pull Request
+        id: cpr
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ steps.app-token.outputs.token }} # Needs read/write for PRs and repo content
           branch: ${{ steps.date.outputs.builddate }}-postgres-rspec-${{ env.RAILS_VERSION }}-changes
           title: ${{ steps.date.outputs.builddate }} postgres-rspec changes (Rails ${{ env.RAILS_VERSION }})
+
+  add-schema:
+    needs: [setup-rails, create-pr]
+    # Only when create-pr created or updated a PR branch
+    if: needs.create-pr.outputs.pr_operation == 'created' || needs.create-pr.outputs.pr_operation == 'updated'
+    uses: ./.github/workflows/add_schema.yml
+    permissions:
+      contents: write
+    with:
+      directory: rails-api/postgres-rspec/${{ needs.setup-rails.outputs.rails_version }}
+      ref: ${{ needs.create-pr.outputs.pr_branch }}
