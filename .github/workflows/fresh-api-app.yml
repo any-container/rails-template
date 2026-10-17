@@ -155,6 +155,10 @@ jobs:
         with:
           name: postgres-rspec-${{ needs.setup-rails.outputs.rails_version }}
           path: ${{ env.APP_DIR }}
+      # Artifact upload/download drops file modes, so restore the executable bit
+      - name: Restore executable bit on bin scripts
+        run: |
+          chmod +x "$APP_DIR"/bin/*
       - name: Get current date (for use in PR)
         id: date
         run: |
