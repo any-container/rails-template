@@ -12,6 +12,7 @@ A feature is a self-contained, whole slice of behaviour (models, migrations, con
 ```
 features/<feature_name>/
   FEATURE.md        # contract: what it does, requirements, injection steps
+  template.rb       # Rails application template that performs the injection
   files/            # source files; paths mirror the target Rails app root
     app/...
     config/...
@@ -21,6 +22,7 @@ features/<feature_name>/
 
 - `<feature_name>` is snake_case.
 - Everything under `files/` copies directly onto the target app root without renaming.
+- `template.rb` is the single injection entry point. It copies `files/` and makes every host edit (gems, routes, initializers) with Rails template actions.
 
 ## Steps
 
@@ -29,12 +31,46 @@ features/<feature_name>/
 3. Create `features/<feature_name>/` with `FEATURE.md` and `files/`.
 4. Write the code in `files/`:
    - Namespace all classes under a module named after the feature to avoid collisions with host code.
-   - Do not edit host-owned files. Where the host must change (routes, initializers, Gemfile), put it in the `FEATURE.md` injection steps, not in `files/`.
+   - Do not put host-owned files in `files/`. Host changes (routes, initializers, Gemfile) belong in `template.rb`.
    - Migrations: use timestamped names and `ActiveRecord::Migration[<target version>]`. Prefix table names with the feature name.
    - Assume only what `FEATURE.md` lists as requirements (Rails version, database, gems).
 5. Write RSpec specs in `files/spec/` covering the feature's behaviour.
-6. Verify by injecting into a template app under `rails-api/` in a scratch copy (never in place): copy `files/` over it, apply the injection steps, run migrations and `bundle exec rspec`. Report failures; do not mark the feature done on a failing run.
-7. Complete `FEATURE.md` (below). Add a row for the feature to `features/CONTEXT.md` if a feature index exists.
+6. Write `template.rb` (see below).
+7. Verify by injecting into a scratch copy of a template app under `rails-api/` (never in place): run `bin/rails app:template LOCATION=<path>/features/<feature_name>/template.rb`, then `bin/rails db:migrate` and `bundle exec rspec`. Run the template a second time to confirm it is safe to re-run. Report failures; do not mark the feature done on a failing run.
+8. Complete `FEATURE.md` (below). Add a row for the feature to `features/CONTEXT.md` if a feature index exists.
+
+## template.rb
+
+Run from the host app root:
+
+```
+bin/rails app:template LOCATION=/path/to/features/<feature_name>/template.rb
+```
+
+Skeleton:
+
+```ruby
+# <Feature Name> injection. See FEATURE.md.
+source_paths.unshift(File.expand_path("files", __dir__))
+
+# 1. Copy the feature's files onto the app root. Thor prompts on conflicts.
+directory ".", "."
+
+# 2. Host edits. Every action must be safe to run twice.
+gem "some_gem", "~> 1.0" unless File.read("Gemfile").include?('gem "some_gem"')
+route "mount_feature_routes" unless File.read("config/routes.rb").include?("mount_feature_routes")
+
+# 3. Follow-up steps.
+after_bundle do
+  rails_command "db:migrate"
+end
+```
+
+Rules:
+- Use Rails template actions (`gem`, `route`, `initializer`, `environment`, `inject_into_file`, `generate`) rather than editing files with raw string handling.
+- Guard every host edit so a second run changes nothing.
+- Never delete or overwrite host code.
+- Reference files only through `source_paths`; do not hard-code absolute paths.
 
 ## FEATURE.md template
 
@@ -49,9 +85,14 @@ features/<feature_name>/
 - Gems: <gem, version constraint>
 
 ## Injection
-1. Copy `files/` onto the app root.
-2. <Host changes: routes line, initializer, Gemfile entry, etc., as exact snippets.>
-3. `bin/rails db:migrate`
+Run from the host app root:
+
+    bin/rails app:template LOCATION=/path/to/features/<feature_name>/template.rb
+
+The template:
+- <Files copied.>
+- <Host changes: gem, route, initializer, as exact snippets.>
+- <Migrations run.>
 
 ## Configuration
 <Env vars / config options, defaults.>

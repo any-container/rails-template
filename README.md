@@ -26,3 +26,24 @@ Idea 3 - deploy a variety of federated web applications like Lemmy or BlueSky
 
 Idea 4 - Private Minecraft and Roblox servers
 Something that would make editing more easy, but still can connect from a switch. https://www.curseforge.com/minecraft-bedrock/scripts/worldedit-be-addon
+
+## Features
+
+`features/` holds whole Rails features built to be injected into an existing service. `features/CONTEXT.md` routes work; use the `new-feature` skill (`.claude/skills/new-feature/SKILL.md`) to add one.
+
+Each feature is a folder:
+
+```
+features/<feature_name>/
+  FEATURE.md    # what it does, requirements, interface
+  template.rb   # Rails application template that performs the injection
+  files/        # source files; paths mirror the target Rails app root
+```
+
+Inject a feature from the host app root:
+
+```
+bin/rails app:template LOCATION=/path/to/features/<feature_name>/template.rb
+```
+
+The approach is copy-and-patch driven by a Rails application template. `template.rb` copies `files/` onto the app and applies host edits (gems, routes, initializers) with Rails template actions, guarded so a second run changes nothing. The host owns the code after injection; there is no upgrade path, so re-inject or diff against the feature to pick up changes.
