@@ -37,7 +37,8 @@ features/<feature_name>/
 5. Write RSpec specs in `files/spec/` covering the feature's behaviour.
 6. Write `template.rb` (see below).
 7. Verify by injecting into a scratch copy of a template app under `rails-api/` (never in place): run `bin/rails app:template LOCATION=<path>/features/<feature_name>/template.rb`, then `bin/rails db:migrate` and `bundle exec rspec`. Run the template a second time to confirm it is safe to re-run. Report failures; do not mark the feature done on a failing run.
-8. Complete `FEATURE.md` (below). Add a row for the feature to `features/CONTEXT.md` if a feature index exists.
+8. Complete `FEATURE.md` (below).
+9. Add a row to the "Feature index" table in `features/CONTEXT.md`: feature name, one-line summary, and a link to `<feature_name>/FEATURE.md`. If the feature changes the routing (a new kind of task), update the routing table too. The feature is not done until this row exists.
 
 ## template.rb
 
