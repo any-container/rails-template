@@ -47,7 +47,7 @@ jobs:
           bundler-cache: true
           working-directory: ${{ inputs.directory }}
       - name: Create and migrate database
-        run: bin/rails db:create db:migrate
+        run: bundle exec rails db:create db:migrate
       - name: Verify schema.rb was created
         run: |
           if [ ! -f db/schema.rb ]; then
