@@ -1,8 +1,19 @@
 name: "Fresh API Rails App (w/ Postgresql & RSpec)"
+# Runs from check-rails-version when a new Rails release is found, or manually.
+# The Rails version comes from rails-api/postgres-rspec/.railsrc.
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 17 * * *"
+    inputs:
+      ref:
+        description: "Ref to build from (defaults to the selected branch)"
+        required: false
+        type: string
+  workflow_call:
+    inputs:
+      ref:
+        description: "Ref to build from (e.g. the commit that updated .railsrc)"
+        required: false
+        type: string
 permissions:
   contents: write
   pull-requests: write
@@ -16,16 +27,23 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+      # Each Rails release gets its own folder: rails-api/postgres-rspec/<version>
+      - name: Get Rails version from .railsrc
+        id: rails
+        run: |
+          version=$(grep -oP '^#\s*rails-version:\s*\K\S+' rails-api/postgres-rspec/.railsrc)
+          if [ -z "$version" ]; then
+            echo "No '# rails-version:' line found in .railsrc."
+            exit 1
+          fi
+          echo "version=$version" >> $GITHUB_OUTPUT
       - name: Install Ruby
         uses: ruby/setup-ruby@v1.329.0
       - name: Install Rails
         run: |
-          gem install rails
-      # Each Rails release gets its own folder: rails-api/postgres-rspec/<version>
-      - name: Get Rails version
-        id: rails
-        run: |
-          echo "version=$(rails -v | awk '{print $2}')" >> $GITHUB_OUTPUT
+          gem install rails -v "${{ steps.rails.outputs.version }}"
       # gem install puts gems in gemdir but their executables (e.g. rails) in bindir
       - name: Get gem and bin directories
         id: gems
@@ -51,6 +69,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
       - name: Install Ruby
         uses: ruby/setup-ruby@v1.329.0
       # gem install puts gems in gemdir but their executables (e.g. rails) in bindir
@@ -144,6 +164,8 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
       # schema.rb is committed separately by add-or-update-schema, so keep it across the rebuild
       - name: Remove existing app for this Rails version (keeping schema.rb)
         run: |
