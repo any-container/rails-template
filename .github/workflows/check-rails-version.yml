@@ -1,6 +1,7 @@
 name: "Check for new Rails release"
 # The latest version already built is the highest version folder in rails-api/postgres-rspec,
-# so nothing is committed here. The folder appears when the PR from fresh-api-app is merged.
+# so nothing is committed here. The folder appears when the PR from fresh-api-app is merged;
+# fresh-api-app stops itself if a PR for the version is already open.
 on:
   workflow_dispatch:
   schedule:
@@ -34,12 +35,6 @@ jobs:
           current=$(ls "$APP_ROOT" | grep -E '^[0-9]+(\.[0-9]+)+$' | sort -V | tail -1)
           echo "Built: ${current:-none}, latest: $latest"
           if [ "$current" = "$latest" ] || [ "$(printf '%s\n%s\n' "$current" "$latest" | sort -V | tail -1)" != "$latest" ]; then
-            echo "new_release=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          # A PR branch for this version means the build already ran and is awaiting merge
-          if git ls-remote --exit-code --heads origin "*-postgres-rspec-$latest-changes" > /dev/null; then
-            echo "A PR branch for Rails $latest already exists."
             echo "new_release=false" >> $GITHUB_OUTPUT
             exit 0
           fi

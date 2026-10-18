@@ -18,7 +18,32 @@ permissions:
   contents: write
   pull-requests: write
 jobs:
+  # Stop early (skipping every job below) if a PR for this version is already open
+  check-open-pr:
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: read
+    outputs:
+      pr_open: ${{ steps.pr.outputs.open }}
+    steps:
+      - name: Check for an open PR for this Rails version
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BRANCH: postgres-rspec-${{ inputs.rails_version }}-changes
+        run: |
+          count=$(gh pr list --head "$BRANCH" --state open --json number --jq length)
+          if [ "$count" -gt 0 ]; then
+            echo "A PR is already open for Rails ${{ inputs.rails_version }} ($BRANCH). Stopping."
+            echo "open=true" >> $GITHUB_OUTPUT
+          else
+            echo "open=false" >> $GITHUB_OUTPUT
+          fi
+
   setup-rails:
+    needs: check-open-pr
+    if: needs.check-open-pr.outputs.pr_open != 'true'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -185,17 +210,13 @@ jobs:
       - name: Restore executable bit on bin scripts
         run: |
           chmod +x "$APP_DIR"/bin/*
-      - name: Get current date (for use in PR)
-        id: date
-        run: |
-          echo "builddate=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
       - name: Create Pull Request
         id: cpr
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ steps.app-token.outputs.token }} # Needs read/write for PRs and repo content
-          branch: ${{ steps.date.outputs.builddate }}-postgres-rspec-${{ env.RAILS_VERSION }}-changes
-          title: ${{ steps.date.outputs.builddate }} postgres-rspec changes (Rails ${{ env.RAILS_VERSION }})
+          branch: postgres-rspec-${{ env.RAILS_VERSION }}-changes
+          title: postgres-rspec changes (Rails ${{ env.RAILS_VERSION }})
 
   add-or-update-schema:
     needs: [setup-rails, create-pr]
