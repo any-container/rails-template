@@ -47,6 +47,7 @@ jobs:
       contents: read
     env:
       APP_DIR: rails-api/postgres-rspec/${{ needs.setup-rails.outputs.rails_version }}
+      RAILSRC: rails-api/postgres-rspec/.railsrc
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -71,11 +72,13 @@ jobs:
           gem install pg
       - name: Create new rails app
         run: |
-          # Generate under a valid app name (a version number isn't one), then move into the versioned folder
-          rails new "$RUNNER_TEMP/postgres-rspec" --database=postgresql --api --skip-test --force | tee postgres-rspec.out
+          # The app name and options come from .railsrc. Generate under that valid app name
+          # (a version number isn't one), then move into the versioned folder
+          APP_NAME=$(grep -v '^\s*#' "$RAILSRC" | awk 'NF && $1 !~ /^-/ {print $1; exit}')
+          (cd "$RUNNER_TEMP" && rails new --rc="$GITHUB_WORKSPACE/$RAILSRC") | tee postgres-rspec.out
           rm -rf "$APP_DIR"
           mkdir -p "$(dirname "$APP_DIR")"
-          mv "$RUNNER_TEMP/postgres-rspec" "$APP_DIR"
+          mv "$RUNNER_TEMP/$APP_NAME" "$APP_DIR"
       - name: Check for build errors
         run: |
           if grep -i "error" postgres-rspec.out; then
