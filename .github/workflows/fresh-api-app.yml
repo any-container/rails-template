@@ -1,7 +1,6 @@
 name: "Fresh API Rails App (w/ Postgresql & RSpec)"
 on:
   workflow_dispatch:
-  pull_request:
   schedule:
     - cron: "0 17 * * *"
 permissions:
@@ -128,8 +127,6 @@ jobs:
 
   create-pr:
     needs: [setup-rails, create-app]
-    # Only validate app generation on PRs; don't open a PR from a PR
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     outputs:
       pr_branch: ${{ steps.cpr.outputs.pull-request-branch }}
@@ -147,14 +144,24 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: Checkout code
         uses: actions/checkout@v7
-      - name: Remove existing app for this Rails version
+      # schema.rb is committed separately by add-schema, so keep it across the rebuild
+      - name: Remove existing app for this Rails version (keeping schema.rb)
         run: |
+          if [ -f "$APP_DIR/db/schema.rb" ]; then
+            cp "$APP_DIR/db/schema.rb" "$RUNNER_TEMP/schema.rb"
+          fi
           rm -rf "$APP_DIR"
       - name: Download app artifact
         uses: actions/download-artifact@v8
         with:
           name: postgres-rspec-${{ needs.setup-rails.outputs.rails_version }}
           path: ${{ env.APP_DIR }}
+      - name: Restore preserved schema.rb
+        run: |
+          if [ -f "$RUNNER_TEMP/schema.rb" ]; then
+            mkdir -p "$APP_DIR/db"
+            cp "$RUNNER_TEMP/schema.rb" "$APP_DIR/db/schema.rb"
+          fi
       # Artifact upload/download drops file modes, so restore the executable bit
       - name: Restore executable bit on bin scripts
         run: |
