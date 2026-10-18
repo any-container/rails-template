@@ -144,7 +144,7 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: Checkout code
         uses: actions/checkout@v7
-      # schema.rb is committed separately by add-schema, so keep it across the rebuild
+      # schema.rb is committed separately by add-or-update-schema, so keep it across the rebuild
       - name: Remove existing app for this Rails version (keeping schema.rb)
         run: |
           if [ -f "$APP_DIR/db/schema.rb" ]; then
@@ -178,11 +178,11 @@ jobs:
           branch: ${{ steps.date.outputs.builddate }}-postgres-rspec-${{ env.RAILS_VERSION }}-changes
           title: ${{ steps.date.outputs.builddate }} postgres-rspec changes (Rails ${{ env.RAILS_VERSION }})
 
-  add-schema:
+  add-or-update-schema:
     needs: [setup-rails, create-pr]
     # Only when create-pr created or updated a PR branch
     if: needs.create-pr.outputs.pr_operation == 'created' || needs.create-pr.outputs.pr_operation == 'updated'
-    uses: ./.github/workflows/add_schema.yml
+    uses: ./.github/workflows/add_or_update_schema.yml
     permissions:
       contents: write
     with:
