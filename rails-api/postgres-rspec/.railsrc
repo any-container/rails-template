@@ -1,3 +1,4 @@
+# rails-version: 8.1.4
 # App name (first positional argument to `rails new`)
 postgres-rspec
 

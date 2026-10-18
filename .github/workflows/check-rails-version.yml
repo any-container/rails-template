@@ -1,0 +1,81 @@
+name: "Check for new Rails release"
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 17 * * *"
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  check-version:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      changed: ${{ steps.compare.outputs.changed }}
+      latest: ${{ steps.compare.outputs.latest }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+      # latest.json only returns the newest stable release (no prereleases)
+      - name: Compare latest Rails release with .railsrc
+        id: compare
+        env:
+          RAILSRC: rails-api/postgres-rspec/.railsrc
+        run: |
+          latest=$(curl -fsS https://rubygems.org/api/v1/versions/rails/latest.json | jq -r .version)
+          current=$(grep -oP '^#\s*rails-version:\s*\K\S+' "$RAILSRC")
+          echo "latest=$latest" >> $GITHUB_OUTPUT
+          if [ -z "$latest" ] || [ "$latest" = "null" ]; then
+            echo "Could not determine the latest Rails version."
+            exit 1
+          fi
+          if [ "$latest" = "$current" ]; then
+            echo "Rails $current is already the latest."
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "Rails $current -> $latest"
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+  update-railsrc:
+    needs: check-version
+    if: needs.check-version.outputs.changed == 'true'
+    runs-on: ubuntu-24.04
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    env:
+      LATEST: ${{ needs.check-version.outputs.latest }}
+      RAILSRC: rails-api/postgres-rspec/.railsrc
+    steps:
+      # The app token lets the push through and is used instead of GITHUB_TOKEN
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+      - name: Update Rails version in .railsrc and commit
+        id: commit
+        run: |
+          sed -i -E "s/^(#\s*rails-version:\s*).*/\1$LATEST/" "$RAILSRC"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$RAILSRC"
+          git commit -m "Update Rails version to $LATEST"
+          git push
+          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+  fresh-api-app:
+    needs: update-railsrc
+    uses: ./.github/workflows/fresh-api-app.yml
+    permissions:
+      contents: write
+      pull-requests: write
+    secrets: inherit
+    with:
+      ref: ${{ needs.update-railsrc.outputs.sha }}
