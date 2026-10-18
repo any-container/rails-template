@@ -1,4 +1,6 @@
 name: "Check for new Rails release"
+# The latest version already built is the highest version folder in rails-api/postgres-rspec,
+# so nothing is committed here. The folder appears when the PR from fresh-api-app is merged.
 on:
   workflow_dispatch:
   schedule:
@@ -12,70 +14,44 @@ jobs:
     permissions:
       contents: read
     outputs:
-      changed: ${{ steps.compare.outputs.changed }}
+      new_release: ${{ steps.compare.outputs.new_release }}
       latest: ${{ steps.compare.outputs.latest }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
       # latest.json only returns the newest stable release (no prereleases)
-      - name: Compare latest Rails release with .railsrc
+      - name: Compare latest Rails release with the version folders
         id: compare
         env:
-          RAILSRC: rails-api/postgres-rspec/.railsrc
+          APP_ROOT: rails-api/postgres-rspec
         run: |
           latest=$(curl -fsS https://rubygems.org/api/v1/versions/rails/latest.json | jq -r .version)
-          current=$(grep -oP '^#\s*rails-version:\s*\K\S+' "$RAILSRC")
-          echo "latest=$latest" >> $GITHUB_OUTPUT
           if [ -z "$latest" ] || [ "$latest" = "null" ]; then
             echo "Could not determine the latest Rails version."
             exit 1
           fi
-          if [ "$latest" = "$current" ]; then
-            echo "Rails $current is already the latest."
-            echo "changed=false" >> $GITHUB_OUTPUT
-          else
-            echo "Rails $current -> $latest"
-            echo "changed=true" >> $GITHUB_OUTPUT
+          echo "latest=$latest" >> $GITHUB_OUTPUT
+          current=$(ls "$APP_ROOT" | grep -E '^[0-9]+(\.[0-9]+)+$' | sort -V | tail -1)
+          echo "Built: ${current:-none}, latest: $latest"
+          if [ "$current" = "$latest" ] || [ "$(printf '%s\n%s\n' "$current" "$latest" | sort -V | tail -1)" != "$latest" ]; then
+            echo "new_release=false" >> $GITHUB_OUTPUT
+            exit 0
           fi
-
-  update-railsrc:
-    needs: check-version
-    if: needs.check-version.outputs.changed == 'true'
-    runs-on: ubuntu-24.04
-    outputs:
-      sha: ${{ steps.commit.outputs.sha }}
-    env:
-      LATEST: ${{ needs.check-version.outputs.latest }}
-      RAILSRC: rails-api/postgres-rspec/.railsrc
-    steps:
-      # The app token lets the push through and is used instead of GITHUB_TOKEN
-      - name: Generate GitHub App Token
-        id: app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ vars.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-      - name: Checkout code
-        uses: actions/checkout@v7
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-      - name: Update Rails version in .railsrc and commit
-        id: commit
-        run: |
-          sed -i -E "s/^(#\s*rails-version:\s*).*/\1$LATEST/" "$RAILSRC"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "$RAILSRC"
-          git commit -m "Update Rails version to $LATEST"
-          git push
-          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          # A PR branch for this version means the build already ran and is awaiting merge
+          if git ls-remote --exit-code --heads origin "*-postgres-rspec-$latest-changes" > /dev/null; then
+            echo "A PR branch for Rails $latest already exists."
+            echo "new_release=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          echo "new_release=true" >> $GITHUB_OUTPUT
 
   fresh-api-app:
-    needs: update-railsrc
+    needs: check-version
+    if: needs.check-version.outputs.new_release == 'true'
     uses: ./.github/workflows/fresh-api-app.yml
     permissions:
       contents: write
       pull-requests: write
     secrets: inherit
     with:
-      ref: ${{ needs.update-railsrc.outputs.sha }}
+      rails_version: ${{ needs.check-version.outputs.latest }}
