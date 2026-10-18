@@ -30,7 +30,6 @@ features/<feature_name>/
 2. Confirm the feature name and scope with the user if either is ambiguous.
 3. Create `features/<feature_name>/` with `FEATURE.md` and `files/`.
 4. Write the code in `files/`:
-   - Namespace all classes under a module named after the feature to avoid collisions with host code.
    - Do not put host-owned files in `files/`. Host changes (routes, initializers, Gemfile) belong in `template.rb`.
    - Migrations: use timestamped names and `ActiveRecord::Migration[<target version>]`. Prefix table names with the feature name.
    - Assume only what `FEATURE.md` lists as requirements (Rails version, database, gems).
