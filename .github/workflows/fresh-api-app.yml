@@ -197,6 +197,9 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ steps.app-token.outputs.token }} # Needs read/write for PRs and repo content
+          # The checkout is a detached commit (inputs.ref is a SHA), so the PR base must be named.
+          # In a called workflow, github.ref_name is the caller's branch.
+          base: ${{ github.ref_name }}
           branch: ${{ steps.date.outputs.builddate }}-postgres-rspec-${{ env.RAILS_VERSION }}-changes
           title: ${{ steps.date.outputs.builddate }} postgres-rspec changes (Rails ${{ env.RAILS_VERSION }})
 
