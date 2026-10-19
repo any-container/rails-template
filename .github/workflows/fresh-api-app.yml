@@ -1,24 +1,49 @@
 name: "Fresh API Rails App (w/ Postgresql & RSpec)"
 # Runs from check-rails-version when a new Rails release is found, or manually.
-# The Rails version comes from rails-api/postgres-rspec/.railsrc.
+# Builds the app for the given Rails version into rails-api/postgres-rspec/<version>.
 on:
   workflow_dispatch:
     inputs:
-      ref:
-        description: "Ref to build from (defaults to the selected branch)"
-        required: false
+      rails_version:
+        description: "Rails version to generate (e.g. 8.1.4)"
+        required: true
         type: string
   workflow_call:
     inputs:
-      ref:
-        description: "Ref to build from (e.g. the commit that updated .railsrc)"
-        required: false
+      rails_version:
+        description: "Rails version to generate (e.g. 8.1.4)"
+        required: true
         type: string
 permissions:
   contents: write
   pull-requests: write
 jobs:
+  # Stop early (skipping every job below) if a PR for this version is already open
+  check-open-pr:
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: read
+    outputs:
+      pr_open: ${{ steps.pr.outputs.open }}
+    steps:
+      - name: Check for an open PR for this Rails version
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BRANCH: postgres-rspec-${{ inputs.rails_version }}-changes
+        run: |
+          count=$(gh pr list --head "$BRANCH" --state open --json number --jq length)
+          if [ "$count" -gt 0 ]; then
+            echo "A PR is already open for Rails ${{ inputs.rails_version }} ($BRANCH). Stopping."
+            echo "open=true" >> $GITHUB_OUTPUT
+          else
+            echo "open=false" >> $GITHUB_OUTPUT
+          fi
+
   setup-rails:
+    needs: check-open-pr
+    if: needs.check-open-pr.outputs.pr_open != 'true'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -27,23 +52,24 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
-        with:
-          ref: ${{ inputs.ref }}
       # Each Rails release gets its own folder: rails-api/postgres-rspec/<version>
-      - name: Get Rails version from .railsrc
+      - name: Validate Rails version
         id: rails
+        env:
+          RAILS_VERSION: ${{ inputs.rails_version }}
         run: |
-          version=$(grep -oP '^#\s*rails-version:\s*\K\S+' rails-api/postgres-rspec/.railsrc)
-          if [ -z "$version" ]; then
-            echo "No '# rails-version:' line found in .railsrc."
+          if ! [[ "$RAILS_VERSION" =~ ^[0-9]+(\.[0-9]+)+$ ]]; then
+            echo "Invalid Rails version: $RAILS_VERSION"
             exit 1
           fi
-          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "version=$RAILS_VERSION" >> $GITHUB_OUTPUT
       - name: Install Ruby
         uses: ruby/setup-ruby@v1.329.0
       - name: Install Rails
+        env:
+          RAILS_VERSION: ${{ steps.rails.outputs.version }}
         run: |
-          gem install rails -v "${{ steps.rails.outputs.version }}"
+          gem install rails -v "$RAILS_VERSION"
       # gem install puts gems in gemdir but their executables (e.g. rails) in bindir
       - name: Get gem and bin directories
         id: gems
@@ -69,8 +95,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
-        with:
-          ref: ${{ inputs.ref }}
       - name: Install Ruby
         uses: ruby/setup-ruby@v1.329.0
       # gem install puts gems in gemdir but their executables (e.g. rails) in bindir
@@ -164,8 +188,6 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: Checkout code
         uses: actions/checkout@v7
-        with:
-          ref: ${{ inputs.ref }}
       # schema.rb is committed separately by add-or-update-schema, so keep it across the rebuild
       - name: Remove existing app for this Rails version (keeping schema.rb)
         run: |
@@ -188,20 +210,13 @@ jobs:
       - name: Restore executable bit on bin scripts
         run: |
           chmod +x "$APP_DIR"/bin/*
-      - name: Get current date (for use in PR)
-        id: date
-        run: |
-          echo "builddate=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
       - name: Create Pull Request
         id: cpr
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ steps.app-token.outputs.token }} # Needs read/write for PRs and repo content
-          # The checkout is a detached commit (inputs.ref is a SHA), so the PR base must be named.
-          # In a called workflow, github.ref_name is the caller's branch.
-          base: ${{ github.ref_name }}
-          branch: ${{ steps.date.outputs.builddate }}-postgres-rspec-${{ env.RAILS_VERSION }}-changes
-          title: ${{ steps.date.outputs.builddate }} postgres-rspec changes (Rails ${{ env.RAILS_VERSION }})
+          branch: postgres-rspec-${{ env.RAILS_VERSION }}-changes
+          title: postgres-rspec changes (Rails ${{ env.RAILS_VERSION }})
 
   add-or-update-schema:
     needs: [setup-rails, create-pr]
