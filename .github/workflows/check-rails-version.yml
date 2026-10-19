@@ -1,7 +1,4 @@
 name: "Check for new Rails release"
-# The latest version already built is the highest version folder in rails-api/postgres-rspec,
-# so nothing is committed here. The folder appears when the PR from fresh-api-app is merged;
-# fresh-api-app stops itself if a PR for the version is already open.
 on:
   workflow_dispatch:
   schedule:
