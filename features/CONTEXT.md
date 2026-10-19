@@ -14,3 +14,4 @@ One row per feature in `features/`. The `new-feature` skill adds a row when it c
 
 | Feature | Summary | Docs |
 |---------|---------|------|
+| identity | Identity with encrypted password, created via a two-step API registration flow (register, confirm token). | [identity/FEATURE.md](identity/FEATURE.md) |
