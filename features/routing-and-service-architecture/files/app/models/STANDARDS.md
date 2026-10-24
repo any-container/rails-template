@@ -13,5 +13,5 @@ Do not use ActiveRecord. Persistence is ROM (`rom-rb` with `rom-sql`).
 
 ## Related
 
-- `app/relations/CONTEXT.md`
-- `app/repos/CONTEXT.md`
+- `app/relations/STANDARDS.md`
+- `app/repos/STANDARDS.md`

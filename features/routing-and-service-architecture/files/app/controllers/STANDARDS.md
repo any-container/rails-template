@@ -14,4 +14,4 @@ Controllers parse input, call one service, render a view. Nothing else.
 
 ## Shared behavior
 
-See `concerns/CONTEXT.md`.
+See `concerns/STANDARDS.md`.
