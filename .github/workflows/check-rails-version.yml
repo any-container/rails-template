@@ -12,38 +12,52 @@ jobs:
     permissions:
       contents: read
     outputs:
-      new_release: ${{ steps.compare.outputs.new_release }}
-      latest: ${{ steps.compare.outputs.latest }}
+      versions: ${{ steps.compare.outputs.versions }}
+      has_updates: ${{ steps.compare.outputs.has_updates }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
-      # latest.json only returns the newest stable release (no prereleases)
-      - name: Compare latest Rails release with the version folders
+      # For each minor series that has a <major.minor>-latest folder, plus the newest stable
+      # minor on rubygems, find the newest stable patch and compare it with the built Rails version
+      - name: Compare latest Rails patch of each minor series with the built apps
         id: compare
         env:
           APP_ROOT: rails-api/postgres-rspec
         run: |
-          latest=$(curl -fsS https://rubygems.org/api/v1/versions/rails/latest.json | jq -r .version)
-          if [ -z "$latest" ] || [ "$latest" = "null" ]; then
-            echo "Could not determine the latest Rails version."
+          all=$(curl -fsS https://rubygems.org/api/v1/versions/rails.json | jq -r '.[] | select(.prerelease | not) | .number')
+          if [ -z "$all" ]; then
+            echo "Could not determine the Rails versions."
             exit 1
           fi
-          echo "latest=$latest" >> $GITHUB_OUTPUT
-          current=$(ls "$APP_ROOT" | grep -E '^[0-9]+(\.[0-9]+)+$' | sort -V | tail -1)
-          echo "Built: ${current:-none}, latest: $latest"
-          if [ "$current" = "$latest" ] || [ "$(printf '%s\n%s\n' "$current" "$latest" | sort -V | tail -1)" != "$latest" ]; then
-            echo "new_release=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          echo "new_release=true" >> $GITHUB_OUTPUT
+          newest_minor=$(echo "$all" | sort -V | tail -1 | cut -d. -f1,2)
+          minors=$( (ls "$APP_ROOT" | sed -n 's/^\([0-9]*\.[0-9]*\)-latest$/\1/p'; echo "$newest_minor") | sort -uV)
+          updates=()
+          for minor in $minors; do
+            latest=$(echo "$all" | grep -E "^${minor//./\.}\.[0-9]+$" | sort -V | tail -1)
+            lock="$APP_ROOT/$minor-latest/Gemfile.lock"
+            current=""
+            if [ -f "$lock" ]; then
+              current=$(sed -n 's/^    rails (\(.*\))$/\1/p' "$lock" | head -1)
+            fi
+            echo "$minor: built ${current:-none}, latest $latest"
+            if [ "$current" != "$latest" ]; then
+              updates+=("$latest")
+            fi
+          done
+          echo "versions=$(printf '%s\n' "${updates[@]}" | jq -R . | jq -sc 'map(select(. != ""))')" >> $GITHUB_OUTPUT
+          echo "has_updates=$([ ${#updates[@]} -gt 0 ] && echo true || echo false)" >> $GITHUB_OUTPUT
 
   fresh-api-app:
     needs: check-version
-    if: needs.check-version.outputs.new_release == 'true'
+    if: needs.check-version.outputs.has_updates == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        rails_version: ${{ fromJSON(needs.check-version.outputs.versions) }}
     uses: ./.github/workflows/fresh-api-app.yml
     permissions:
       contents: write
       pull-requests: write
     secrets: inherit
     with:
-      rails_version: ${{ needs.check-version.outputs.latest }}
+      rails_version: ${{ matrix.rails_version }}
