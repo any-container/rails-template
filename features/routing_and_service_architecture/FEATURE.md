@@ -10,7 +10,7 @@ Agentic routing for an API-only Rails app using RSpec, ROM (`rom-rb` + `rom-sql`
 ## Injection
 Run from the host app root:
 
-    bin/rails app:template LOCATION=/path/to/features/routing-and-service-architecture/template.rb
+    bin/rails app:template LOCATION=/path/to/features/routing_and_service_architecture/template.rb
 
 The template:
 - Copies `AGENTS.md` to the app root.
