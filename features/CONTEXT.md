@@ -14,4 +14,4 @@ One row per feature in `features/`. The `new-feature` skill adds a row when it c
 
 | Feature | Summary | Docs |
 |---------|---------|------|
-| routing-and-service-architecture | `AGENTS.md` routing (plus symlinks for other agent tools) and per-folder `STANDARDS.md` coding conventions for `app/` (ROM, services, Jbuilder). | [routing-and-service-architecture/FEATURE.md](routing-and-service-architecture/FEATURE.md) |
+| routing_and_service_architecture | `AGENTS.md` routing (plus symlinks for other agent tools) and per-folder `STANDARDS.md` coding conventions for `app/` (ROM, services, Jbuilder). | [routing_and_service_architecture/FEATURE.md](routing_and_service_architecture/FEATURE.md) |
