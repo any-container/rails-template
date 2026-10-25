@@ -159,6 +159,12 @@ jobs:
             echo "RSpec was not installed."
             exit 1
           fi
+      - name: Install annotaterb
+        if: inputs.variant == 'postgres-rspec'
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          bundle add annotaterb --group development
+          bin/rails generate annotate_rb:install
       - name: Remove nested git repo so we can commit
         run: |
           rm -rf $APP_DIR/.git
@@ -204,7 +210,7 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: Checkout code
         uses: actions/checkout@v7
-      # schema.rb is committed separately by add-or-update-schema, so keep it across the rebuild
+      # schema.rb is committed separately by active-record-schema-and-annotations, so keep it across the rebuild
       - name: Remove existing app for this Rails minor series (keeping schema.rb)
         run: |
           if [ -f "$APP_DIR/db/schema.rb" ]; then
@@ -235,11 +241,11 @@ jobs:
           title: ${{ inputs.variant }} changes (Rails ${{ env.RAILS_VERSION }})
 
   # Only variants with a database have a schema.rb to maintain (or-rspec has no Active Record)
-  add-or-update-schema:
+  active-record-schema-and-annotations:
     needs: [setup-rails, create-pr]
     # Only when create-pr created or updated a PR branch
     if: inputs.variant == 'postgres-rspec' && (needs.create-pr.outputs.pr_operation == 'created' || needs.create-pr.outputs.pr_operation == 'updated')
-    uses: ./.github/workflows/add_or_update_schema.yml
+    uses: ./.github/workflows/active_record_schema_and_annotations.yml
     permissions:
       contents: write
     with:
