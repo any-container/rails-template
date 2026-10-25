@@ -2,7 +2,7 @@
 postgres-rspec
 
 # Options
---skip-active-record
+--database=postgresql
 --api
 --skip-test
 --skip-action-mailer

@@ -13,9 +13,9 @@ Read `features/CONTEXT.md` for routing. It says where to go for each kind of tas
 | Folder | Contents |
 |--------|----------|
 | `features/` | Injectable Rails features. Each is a folder with `FEATURE.md`, `template.rb`, and `files/`. `CONTEXT.md` routes work and indexes features. |
-| `rails-api/` | Template Rails API apps, one folder per variant (e.g. `postgres-rspec`), then one per Rails minor series, holding its latest patch release (e.g. `8.1-latest`). |
+| `rails-api/` | Template Rails API apps, one folder per variant (`postgres-rspec` with Postgres and Active Record, `or-rspec` without either), then one per Rails minor series, holding its latest patch release (e.g. `8.1-latest`). |
 | `infra/` | Terraform for infrastructure, one folder per stack (e.g. `postgres-app`). |
-| `.github/` | GitHub Actions workflows: app generation, infra creation, tests. |
+| `.github/` | GitHub Actions workflows: app generation, schema add or update, infra creation, tests. |
 | `.claude/` | Claude Code skills, including `new-feature`. |
 
 ## Agent skills

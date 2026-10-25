@@ -1,6 +1,7 @@
-name: "Fresh API Rails App (w/ Postgresql & RSpec)"
+name: "Fresh API Rails App"
 # Runs from check-rails-version when a new Rails release is found, or manually.
-# Builds the app for the given Rails version into rails-api/postgres-rspec/<major.minor>-latest,
+# Builds the given variant (a folder in rails-api/ holding a .railsrc, e.g. postgres-rspec or or-rspec)
+# for the given Rails version into rails-api/<variant>/<major.minor>-latest,
 # replacing the previous patch release of that minor series.
 on:
   workflow_dispatch:
@@ -9,10 +10,18 @@ on:
         description: "Rails version to generate (e.g. 8.1.4)"
         required: true
         type: string
+      variant:
+        description: "App variant to generate (folder in rails-api/, e.g. postgres-rspec or or-rspec)"
+        required: true
+        type: string
   workflow_call:
     inputs:
       rails_version:
         description: "Rails version to generate (e.g. 8.1.4)"
+        required: true
+        type: string
+      variant:
+        description: "App variant to generate (folder in rails-api/, e.g. postgres-rspec or or-rspec)"
         required: true
         type: string
 permissions:
@@ -33,9 +42,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RAILS_VERSION: ${{ inputs.rails_version }}
+          VARIANT: ${{ inputs.variant }}
         run: |
           MINOR=$(echo "$RAILS_VERSION" | cut -d. -f1,2)
-          BRANCH="postgres-rspec-${MINOR}-latest-changes"
+          BRANCH="${VARIANT}-${MINOR}-latest-changes"
           count=$(gh pr list --head "$BRANCH" --state open --json number --jq length)
           if [ "$count" -gt 0 ]; then
             echo "A PR is already open for Rails $MINOR ($BRANCH). Stopping."
@@ -56,7 +66,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
-      # Each Rails minor series gets one folder: rails-api/postgres-rspec/<major.minor>-latest
+      # Each Rails minor series gets one folder: rails-api/<variant>/<major.minor>-latest
       - name: Validate Rails version
         id: rails
         env:
@@ -87,7 +97,7 @@ jobs:
           path: |
             ${{ steps.gems.outputs.gemdir }}
             ${{ steps.gems.outputs.bindir }}
-          key: rails-gems-${{ runner.os }}-${{ github.run_id }}
+          key: rails-gems-${{ inputs.variant }}-${{ runner.os }}-${{ github.run_id }}
 
   create-app:
     needs: setup-rails
@@ -95,8 +105,8 @@ jobs:
     permissions:
       contents: read
     env:
-      APP_DIR: rails-api/postgres-rspec/${{ needs.setup-rails.outputs.minor }}-latest
-      RAILSRC: rails-api/postgres-rspec/.railsrc
+      APP_DIR: rails-api/${{ inputs.variant }}/${{ needs.setup-rails.outputs.minor }}-latest
+      RAILSRC: rails-api/${{ inputs.variant }}/.railsrc
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -114,20 +124,24 @@ jobs:
           path: |
             ${{ steps.gems.outputs.gemdir }}
             ${{ steps.gems.outputs.bindir }}
-          key: rails-gems-${{ runner.os }}-${{ github.run_id }}
+          key: rails-gems-${{ inputs.variant }}-${{ runner.os }}-${{ github.run_id }}
           fail-on-cache-miss: true
+      - name: Install Postgres driver
+        if: inputs.variant == 'postgres-rspec'
+        run: |
+          gem install pg
       - name: Create new rails app
         run: |
           # The app name and options come from .railsrc. Generate under that valid app name
           # (a version number isn't one), then move into the versioned folder
           APP_NAME=$(grep -v '^\s*#' "$RAILSRC" | awk 'NF && $1 !~ /^-/ {print $1; exit}')
-          (cd "$RUNNER_TEMP" && rails new --rc="$GITHUB_WORKSPACE/$RAILSRC") | tee postgres-rspec.out
+          (cd "$RUNNER_TEMP" && rails new --rc="$GITHUB_WORKSPACE/$RAILSRC") | tee "$RUNNER_TEMP/rails-new.out"
           rm -rf "$APP_DIR"
           mkdir -p "$(dirname "$APP_DIR")"
           mv "$RUNNER_TEMP/$APP_NAME" "$APP_DIR"
       - name: Check for build errors
         run: |
-          if grep -i "error" postgres-rspec.out; then
+          if grep -i "error" "$RUNNER_TEMP/rails-new.out"; then
             echo "Error creating new rails app."
             exit 1
           fi
@@ -135,7 +149,7 @@ jobs:
             echo "Rails app was not generated."
             exit 1
           fi
-          rm postgres-rspec.out
+          rm "$RUNNER_TEMP/rails-new.out"
       - name: Install RSpec
         working-directory: ${{ env.APP_DIR }}
         run: |
@@ -166,7 +180,7 @@ jobs:
       - name: Upload app artifact
         uses: actions/upload-artifact@v7
         with:
-          name: postgres-rspec-${{ needs.setup-rails.outputs.minor }}-latest
+          name: ${{ inputs.variant }}-${{ needs.setup-rails.outputs.minor }}-latest
           path: ${{ env.APP_DIR }}
           include-hidden-files: true
           if-no-files-found: error
@@ -174,9 +188,12 @@ jobs:
   create-pr:
     needs: [setup-rails, create-app]
     runs-on: ubuntu-24.04
+    outputs:
+      pr_branch: ${{ steps.cpr.outputs.pull-request-branch }}
+      pr_operation: ${{ steps.cpr.outputs.pull-request-operation }}
     env:
       RAILS_VERSION: ${{ needs.setup-rails.outputs.rails_version }}
-      APP_DIR: rails-api/postgres-rspec/${{ needs.setup-rails.outputs.minor }}-latest
+      APP_DIR: rails-api/${{ inputs.variant }}/${{ needs.setup-rails.outputs.minor }}-latest
     steps:
       # Generate the short-lived installation token
       - name: Generate GitHub App Token
@@ -187,14 +204,24 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: Checkout code
         uses: actions/checkout@v7
-      - name: Remove existing app for this Rails minor series
+      # schema.rb is committed separately by add-or-update-schema, so keep it across the rebuild
+      - name: Remove existing app for this Rails minor series (keeping schema.rb)
         run: |
+          if [ -f "$APP_DIR/db/schema.rb" ]; then
+            cp "$APP_DIR/db/schema.rb" "$RUNNER_TEMP/schema.rb"
+          fi
           rm -rf "$APP_DIR"
       - name: Download app artifact
         uses: actions/download-artifact@v8
         with:
-          name: postgres-rspec-${{ needs.setup-rails.outputs.minor }}-latest
+          name: ${{ inputs.variant }}-${{ needs.setup-rails.outputs.minor }}-latest
           path: ${{ env.APP_DIR }}
+      - name: Restore preserved schema.rb
+        run: |
+          if [ -f "$RUNNER_TEMP/schema.rb" ]; then
+            mkdir -p "$APP_DIR/db"
+            cp "$RUNNER_TEMP/schema.rb" "$APP_DIR/db/schema.rb"
+          fi
       # Artifact upload/download drops file modes, so restore the executable bit
       - name: Restore executable bit on bin scripts
         run: |
@@ -204,5 +231,17 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ steps.app-token.outputs.token }} # Needs read/write for PRs and repo content
-          branch: postgres-rspec-${{ needs.setup-rails.outputs.minor }}-latest-changes
-          title: postgres-rspec changes (Rails ${{ env.RAILS_VERSION }})
+          branch: ${{ inputs.variant }}-${{ needs.setup-rails.outputs.minor }}-latest-changes
+          title: ${{ inputs.variant }} changes (Rails ${{ env.RAILS_VERSION }})
+
+  # Only variants with a database have a schema.rb to maintain (or-rspec has no Active Record)
+  add-or-update-schema:
+    needs: [setup-rails, create-pr]
+    # Only when create-pr created or updated a PR branch
+    if: inputs.variant == 'postgres-rspec' && (needs.create-pr.outputs.pr_operation == 'created' || needs.create-pr.outputs.pr_operation == 'updated')
+    uses: ./.github/workflows/add_or_update_schema.yml
+    permissions:
+      contents: write
+    with:
+      directory: rails-api/${{ inputs.variant }}/${{ needs.setup-rails.outputs.minor }}-latest
+      ref: ${{ needs.create-pr.outputs.pr_branch }}

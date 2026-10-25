@@ -1,0 +1,11 @@
+# App name (first positional argument to `rails new`)
+or-rspec
+
+# Options
+# "OR" is Hanami's OR, the Ruby library (not yet added). Persistence is left to it, so no Active Record.
+--skip-active-record
+--api
+--skip-test
+--skip-action-mailer
+--skip-action-mailbox
+--force
