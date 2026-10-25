@@ -1,4 +1,6 @@
-name: "Add or Update Schema"
+name: "Active Record Schema and Annotations"
+# Migrates the database to produce db/schema.rb, then annotates models with annotaterb (the maintained
+# fork of the annotate gem). Only for variants that use Active Record.
 on:
   workflow_call:
     inputs:
@@ -7,13 +9,13 @@ on:
         required: true
         type: string
       ref:
-        description: "Branch to check out and commit schema.rb to"
+        description: "Branch to check out and commit schema.rb and model annotations to"
         required: true
         type: string
 permissions:
   contents: write
 jobs:
-  add-or-update-schema:
+  active-record-schema-and-annotations:
     runs-on: ubuntu-24.04
     services:
       postgres:
@@ -48,14 +50,16 @@ jobs:
             echo "db/schema.rb was not created."
             exit 1
           fi
-      - name: Commit schema.rb if changed
+      - name: Annotate models
+        run: bundle exec annotaterb models
+      - name: Commit schema.rb and annotations if changed
         run: |
-          if git diff --quiet HEAD -- db/schema.rb && [ -z "$(git ls-files --others --exclude-standard db/schema.rb)" ]; then
-            echo "db/schema.rb is unchanged; nothing to commit."
+          if [ -z "$(git status --porcelain -- .)" ]; then
+            echo "Schema and annotations are unchanged; nothing to commit."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add db/schema.rb
-          git commit -m "Add or update schema.rb"
+          git add -- .
+          git commit -m "Add or update schema.rb and model annotations"
           git push origin "HEAD:${{ inputs.ref }}"
