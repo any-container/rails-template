@@ -12,17 +12,16 @@ jobs:
     permissions:
       contents: read
     outputs:
-      versions: ${{ steps.compare.outputs.versions }}
+      updates: ${{ steps.compare.outputs.updates }}
       has_updates: ${{ steps.compare.outputs.has_updates }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
-      # For each minor series that has a <major.minor>-latest folder, plus the newest stable
-      # minor on rubygems, find the newest stable patch and compare it with the built Rails version
+      # For each variant (folder in rails-api/) and each minor series that has a <major.minor>-latest folder,
+      # plus the newest stable minor on rubygems, find the newest stable patch and compare it with the
+      # built Rails version
       - name: Compare latest Rails patch of each minor series with the built apps
         id: compare
-        env:
-          APP_ROOT: rails-api/postgres-rspec
         run: |
           all=$(curl -fsS https://rubygems.org/api/v1/versions/rails.json | jq -r '.[] | select(.prerelease | not) | .number')
           if [ -z "$all" ]; then
@@ -30,21 +29,24 @@ jobs:
             exit 1
           fi
           newest_minor=$(echo "$all" | sort -V | tail -1 | cut -d. -f1,2)
-          minors=$( (ls "$APP_ROOT" | sed -n 's/^\([0-9]*\.[0-9]*\)-latest$/\1/p'; echo "$newest_minor") | sort -uV)
           updates=()
-          for minor in $minors; do
-            latest=$(echo "$all" | grep -E "^${minor//./\.}\.[0-9]+$" | sort -V | tail -1)
-            lock="$APP_ROOT/$minor-latest/Gemfile.lock"
-            current=""
-            if [ -f "$lock" ]; then
-              current=$(sed -n 's/^    rails (\(.*\))$/\1/p' "$lock" | head -1)
-            fi
-            echo "$minor: built ${current:-none}, latest $latest"
-            if [ "$current" != "$latest" ]; then
-              updates+=("$latest")
-            fi
+          for variant_dir in rails-api/*/; do
+            variant=$(basename "$variant_dir")
+            minors=$( (ls "$variant_dir" | sed -n 's/^\([0-9]*\.[0-9]*\)-latest$/\1/p'; echo "$newest_minor") | sort -uV)
+            for minor in $minors; do
+              latest=$(echo "$all" | grep -E "^${minor//./\.}\.[0-9]+$" | sort -V | tail -1)
+              lock="$variant_dir$minor-latest/Gemfile.lock"
+              current=""
+              if [ -f "$lock" ]; then
+                current=$(sed -n 's/^    rails (\(.*\))$/\1/p' "$lock" | head -1)
+              fi
+              echo "$variant $minor: built ${current:-none}, latest $latest"
+              if [ "$current" != "$latest" ]; then
+                updates+=("$variant $latest")
+              fi
+            done
           done
-          echo "versions=$(printf '%s\n' "${updates[@]}" | jq -R . | jq -sc 'map(select(. != ""))')" >> $GITHUB_OUTPUT
+          echo "updates=$(printf '%s\n' "${updates[@]}" | jq -R 'select(. != "") | split(" ") | {variant: .[0], rails_version: .[1]}' | jq -sc .)" >> $GITHUB_OUTPUT
           echo "has_updates=$([ ${#updates[@]} -gt 0 ] && echo true || echo false)" >> $GITHUB_OUTPUT
 
   fresh-api-app:
@@ -53,11 +55,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rails_version: ${{ fromJSON(needs.check-version.outputs.versions) }}
+        update: ${{ fromJSON(needs.check-version.outputs.updates) }}
     uses: ./.github/workflows/fresh-api-app.yml
     permissions:
       contents: write
       pull-requests: write
     secrets: inherit
     with:
-      rails_version: ${{ matrix.rails_version }}
+      rails_version: ${{ matrix.update.rails_version }}
+      variant: ${{ matrix.update.variant }}
