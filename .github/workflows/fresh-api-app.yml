@@ -116,9 +116,6 @@ jobs:
             ${{ steps.gems.outputs.bindir }}
           key: rails-gems-${{ runner.os }}-${{ github.run_id }}
           fail-on-cache-miss: true
-      - name: Install Postgres
-        run: |
-          gem install pg
       - name: Create new rails app
         run: |
           # The app name and options come from .railsrc. Generate under that valid app name
@@ -177,9 +174,6 @@ jobs:
   create-pr:
     needs: [setup-rails, create-app]
     runs-on: ubuntu-24.04
-    outputs:
-      pr_branch: ${{ steps.cpr.outputs.pull-request-branch }}
-      pr_operation: ${{ steps.cpr.outputs.pull-request-operation }}
     env:
       RAILS_VERSION: ${{ needs.setup-rails.outputs.rails_version }}
       APP_DIR: rails-api/postgres-rspec/${{ needs.setup-rails.outputs.minor }}-latest
@@ -193,24 +187,14 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: Checkout code
         uses: actions/checkout@v7
-      # schema.rb is committed separately by add-or-update-schema, so keep it across the rebuild
-      - name: Remove existing app for this Rails minor series (keeping schema.rb)
+      - name: Remove existing app for this Rails minor series
         run: |
-          if [ -f "$APP_DIR/db/schema.rb" ]; then
-            cp "$APP_DIR/db/schema.rb" "$RUNNER_TEMP/schema.rb"
-          fi
           rm -rf "$APP_DIR"
       - name: Download app artifact
         uses: actions/download-artifact@v8
         with:
           name: postgres-rspec-${{ needs.setup-rails.outputs.minor }}-latest
           path: ${{ env.APP_DIR }}
-      - name: Restore preserved schema.rb
-        run: |
-          if [ -f "$RUNNER_TEMP/schema.rb" ]; then
-            mkdir -p "$APP_DIR/db"
-            cp "$RUNNER_TEMP/schema.rb" "$APP_DIR/db/schema.rb"
-          fi
       # Artifact upload/download drops file modes, so restore the executable bit
       - name: Restore executable bit on bin scripts
         run: |
@@ -222,14 +206,3 @@ jobs:
           token: ${{ steps.app-token.outputs.token }} # Needs read/write for PRs and repo content
           branch: postgres-rspec-${{ needs.setup-rails.outputs.minor }}-latest-changes
           title: postgres-rspec changes (Rails ${{ env.RAILS_VERSION }})
-
-  add-or-update-schema:
-    needs: [setup-rails, create-pr]
-    # Only when create-pr created or updated a PR branch
-    if: needs.create-pr.outputs.pr_operation == 'created' || needs.create-pr.outputs.pr_operation == 'updated'
-    uses: ./.github/workflows/add_or_update_schema.yml
-    permissions:
-      contents: write
-    with:
-      directory: rails-api/postgres-rspec/${{ needs.setup-rails.outputs.minor }}-latest
-      ref: ${{ needs.create-pr.outputs.pr_branch }}
