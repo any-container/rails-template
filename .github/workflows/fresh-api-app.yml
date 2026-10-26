@@ -80,6 +80,9 @@ jobs:
           echo "minor=$(echo "$RAILS_VERSION" | cut -d. -f1,2)" >> $GITHUB_OUTPUT
       - name: Install Ruby
         uses: ruby/setup-ruby@v1.329.0
+        with:
+          # Ruby 3.4 ships Bundler 2.6.x, which would write "BUNDLED WITH 2.6.9" into the generated Gemfile.lock
+          bundler: latest
       - name: Install Rails
         env:
           RAILS_VERSION: ${{ steps.rails.outputs.version }}
@@ -112,6 +115,9 @@ jobs:
         uses: actions/checkout@v7
       - name: Install Ruby
         uses: ruby/setup-ruby@v1.329.0
+        with:
+          # Ruby 3.4 ships Bundler 2.6.x, which would write "BUNDLED WITH 2.6.9" into the generated Gemfile.lock
+          bundler: latest
       # gem install puts gems in gemdir but their executables (e.g. rails) in bindir
       - name: Get gem and bin directories
         id: gems
