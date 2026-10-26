@@ -1,0 +1,26 @@
+current directory: /home/runner/work/rails-template/rails-template/rails-api/postgres-rspec/8.1-latest/vendor/bundle/ruby/3.4.0/gems/websocket-driver-0.8.2/ext/websocket-driver
+/opt/hostedtoolcache/Ruby/3.4.8/x64/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /home/runner/work/rails-template/rails-template/rails-api/postgres-rspec/8.1-latest/vendor/bundle/ruby/3.4.0/gems/websocket-driver-0.8.2/ext/websocket-driver
+make DESTDIR\= sitearchdir\=./.gem.20261026-2427-7p0jnl sitelibdir\=./.gem.20261026-2427-7p0jnl clean
+
+current directory: /home/runner/work/rails-template/rails-template/rails-api/postgres-rspec/8.1-latest/vendor/bundle/ruby/3.4.0/gems/websocket-driver-0.8.2/ext/websocket-driver
+make DESTDIR\= sitearchdir\=./.gem.20261026-2427-7p0jnl sitelibdir\=./.gem.20261026-2427-7p0jnl
+compiling websocket_mask.c
+websocket_mask.c: In function ‘Init_websocket_mask’:
+websocket_mask.c:26:6: warning: old-style function definition [-Wold-style-definition]
+   26 | void Init_websocket_mask()
+      |      ^~~~~~~~~~~~~~~~~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+linking shared-object websocket_mask.so
+
+current directory: /home/runner/work/rails-template/rails-template/rails-api/postgres-rspec/8.1-latest/vendor/bundle/ruby/3.4.0/gems/websocket-driver-0.8.2/ext/websocket-driver
+make DESTDIR\= sitearchdir\=./.gem.20261026-2427-7p0jnl sitelibdir\=./.gem.20261026-2427-7p0jnl install
+/usr/bin/install -c -m 0755 websocket_mask.so ./.gem.20261026-2427-7p0jnl
+
+current directory: /home/runner/work/rails-template/rails-template/rails-api/postgres-rspec/8.1-latest/vendor/bundle/ruby/3.4.0/gems/websocket-driver-0.8.2/ext/websocket-driver
+make DESTDIR\= sitearchdir\=./.gem.20261026-2427-7p0jnl sitelibdir\=./.gem.20261026-2427-7p0jnl clean

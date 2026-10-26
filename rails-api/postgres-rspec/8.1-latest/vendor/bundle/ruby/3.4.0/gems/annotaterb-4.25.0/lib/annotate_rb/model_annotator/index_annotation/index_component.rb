@@ -1,0 +1,159 @@
+# frozen_string_literal: true
+
+module AnnotateRb
+  module ModelAnnotator
+    module IndexAnnotation
+      class IndexComponent < Components::Base
+        attr_reader :index, :max_size, :options
+
+        def initialize(index, max_size, options)
+          @index = index
+          @max_size = max_size
+          @options = options
+        end
+
+        def to_default
+          unique_info = index.unique ? " UNIQUE" : ""
+
+          nulls_not_distinct_info = if index.try(:nulls_not_distinct)
+            " NULLS NOT DISTINCT"
+          else
+            ""
+          end
+
+          value = index.try(:where).try(:to_s)
+          where_info = if value.present?
+            " WHERE #{value}"
+          else
+            ""
+          end
+
+          value = index.try(:using).try(:to_sym)
+          using_info = if value.present? && value != :btree
+            " USING #{value}"
+          else
+            ""
+          end
+
+          include_info = ""
+          if options[:show_indexes_include]
+            value = index.try(:include)
+            include_info = if value.present? && value.any?
+              " INCLUDE (#{value.join(",")})"
+            else
+              ""
+            end
+          end
+
+          comment_info = ""
+          if options[:show_indexes_comments]
+            value = index.try(:comment).try(:to_s)
+            comment_info = if value.present?
+              " COMMENT #{value}"
+            else
+              ""
+            end
+          end
+
+          # standard:disable Lint/FormatParameterMismatch
+          sprintf(
+            "#  %-#{max_size}.#{max_size}s %s%s%s%s%s%s%s",
+            index.name,
+            "(#{columns_info.join(",")})",
+            include_info,
+            unique_info,
+            nulls_not_distinct_info,
+            where_info,
+            using_info,
+            comment_info
+          ).rstrip
+          # standard:enable Lint/FormatParameterMismatch
+        end
+
+        def to_markdown
+          unique_info = index.unique ? " _unique_" : ""
+
+          nulls_not_distinct_info = if index.try(:nulls_not_distinct)
+            " _nulls_not_distinct_"
+          else
+            ""
+          end
+
+          value = index.try(:where).try(:to_s)
+          where_info = if value.present?
+            " _where_ #{value}"
+          else
+            ""
+          end
+
+          value = index.try(:using).try(:to_sym)
+          using_info = if value.present? && value != :btree
+            " _using_ #{value}"
+          else
+            ""
+          end
+
+          include_info = ""
+          if options[:show_indexes_include]
+            value = index.try(:include)
+            include_info = if value.present? && value.any?
+              " _include_ (#{value.join(",")})"
+            else
+              ""
+            end
+          end
+
+          comment_info = ""
+          if options[:show_indexes_comments]
+            value = index.try(:comment).try(:to_s)
+            comment_info = if value.present?
+              " _comment_ #{value}"
+            else
+              ""
+            end
+          end
+
+          details = sprintf(
+            "%s%s%s%s%s%s",
+            include_info,
+            unique_info,
+            nulls_not_distinct_info,
+            where_info,
+            using_info,
+            comment_info
+          ).strip
+          details = " (#{details})" unless details.blank?
+
+          sprintf(
+            "# * `%s`%s:\n#     * **`%s`**",
+            index.name,
+            details,
+            columns_info.join("`**\n#     * **`")
+          )
+        end
+
+        private
+
+        def columns_info
+          Array(index.columns).map do |col|
+            column = col.to_s.gsub("\r", '\r').gsub("\n", '\n')
+            opclass = column_option(:opclasses, col)
+            order = column_option(:orders, col)
+
+            [column, opclass, order&.upcase].compact.join(" ")
+          end
+        end
+
+        # ActiveRecord condenses per column index options (`opclasses`, `orders`)
+        # into a single value when every column shares the same one, so the
+        # option can either be a Hash keyed by column or a bare value.
+        def column_option(option, col)
+          value = index.try(option)
+          value = value[col.to_s] if value.is_a?(Hash)
+
+          value.presence&.to_s
+        end
+      end
+    end
+  end
+end

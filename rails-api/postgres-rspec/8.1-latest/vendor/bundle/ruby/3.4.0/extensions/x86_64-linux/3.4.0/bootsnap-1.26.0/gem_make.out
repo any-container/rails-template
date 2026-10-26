@@ -1,0 +1,23 @@
+current directory: /home/runner/work/rails-template/rails-template/rails-api/postgres-rspec/8.1-latest/vendor/bundle/ruby/3.4.0/gems/bootsnap-1.26.0/ext/bootsnap
+/opt/hostedtoolcache/Ruby/3.4.8/x64/bin/ruby extconf.rb
+checking for fdatasync() in unistd.h... yes
+checking for fstatat() in sys/stat.h... yes
+checking for whether -D_GNU_SOURCE is accepted as CPPFLAGS... yes
+checking for whether -O3 is accepted as CFLAGS... yes
+checking for whether -std=c99 is accepted as CFLAGS... yes
+creating Makefile
+
+current directory: /home/runner/work/rails-template/rails-template/rails-api/postgres-rspec/8.1-latest/vendor/bundle/ruby/3.4.0/gems/bootsnap-1.26.0/ext/bootsnap
+make DESTDIR\= sitearchdir\=./.gem.20261026-2427-tg7h29 sitelibdir\=./.gem.20261026-2427-tg7h29 clean
+
+current directory: /home/runner/work/rails-template/rails-template/rails-api/postgres-rspec/8.1-latest/vendor/bundle/ruby/3.4.0/gems/bootsnap-1.26.0/ext/bootsnap
+make DESTDIR\= sitearchdir\=./.gem.20261026-2427-tg7h29 sitelibdir\=./.gem.20261026-2427-tg7h29
+compiling bootsnap.c
+linking shared-object bootsnap/bootsnap.so
+
+current directory: /home/runner/work/rails-template/rails-template/rails-api/postgres-rspec/8.1-latest/vendor/bundle/ruby/3.4.0/gems/bootsnap-1.26.0/ext/bootsnap
+make DESTDIR\= sitearchdir\=./.gem.20261026-2427-tg7h29 sitelibdir\=./.gem.20261026-2427-tg7h29 install
+/usr/bin/install -c -m 0755 bootsnap.so ./.gem.20261026-2427-tg7h29/bootsnap
+
+current directory: /home/runner/work/rails-template/rails-template/rails-api/postgres-rspec/8.1-latest/vendor/bundle/ruby/3.4.0/gems/bootsnap-1.26.0/ext/bootsnap
+make DESTDIR\= sitearchdir\=./.gem.20261026-2427-tg7h29 sitelibdir\=./.gem.20261026-2427-tg7h29 clean
