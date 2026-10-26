@@ -1,0 +1,84 @@
+=== 4.1.2
+
+* Security: Downloads no longer apply setuid, setgid or sticky bits sent by the server, check that a server-chosen local name matches the requested remote basename (as OpenSSH does since CVE-2019-6111), and refuse to follow an existing local symlink at a server-named path instead of writing through it. The local path passed by the caller may still be a symlink. O_NOFOLLOW suggested in net-sftp#162 by srosenhamer [#104]
+* Security: Recursive downloads, and downloads into a directory, reject file names from the server that are not a single path component (such as `../x` or `a/b`) instead of writing outside the target directory. Reported in net-sftp#162 by srosenhamer [#103]
+* Raise `Net::SCP::Error` when the server ends a transfer before the SCP protocol finishes, instead of reporting a truncated transfer as successful [#105, #96]
+* Opening an `scp://` URI through `uri/open-scp` now percent-decodes the user, password and path (once, keeping a literal `+`) and passes an IPv6 address to SSH without its brackets, so `scp://user@[::1]/a%20b` downloads `/a b` from `::1`. Thanks @OskarEichler [#94]
+* Opening an `scp://` URI through `uri/open-scp` now writes the download into the OpenURI buffer as it arrives, so large files spill to a temporary file instead of being held in memory twice. Thanks @OskarEichler [#93]
+* Parsing an `scp://` URI with a valueless query entry (`?flag`) or an empty one (`?a=1&&b=2`) no longer raises `NoMethodError`, and `URI::SCP#options` reflects the current query after `query=`. Thanks @OskarEichler [#92]
+* Opening an `scp://` URI through `uri/open-scp` now calls `:progress_proc` with the number of bytes received, as OpenURI documents, instead of with the SCP progress arguments (which raised `ArgumentError` for a lambda), and calls `:content_length_proc` once with the file size. Thanks @OskarEichler [#91]
+* Opening an `scp://` URI through `uri/open-scp` now uses the port and password given in the URI; they were passed outside the `:ssh` options and ignored. Options given in `:ssh` still take precedence. Thanks @OskarEichler [#90]
+* Close the local file net-scp opened for an upload or download when the transfer fails, so it is not left open (and locked on Windows) [#89, #20]
+* With `preserve: true`, recursive downloads now keep directories' modification times, which were overwritten when their contents were created. Thanks @OskarEichler [#88]
+* `upload`/`upload!` with a zero, negative or non-Integer `:chunk_size` now raises `ArgumentError` before opening a channel; previously `0` hung forever sending empty chunks, a negative value or a String failed only after the channel was open, and a Float was silently truncated. Thanks @OskarEichler [#87]
+* Uploading from an IO that isn't at its start now announces only the remaining bytes, instead of the full size, which made the transfer hang or fail. Thanks @OskarEichler [#86]
+* Accept a `Pathname` as the local path for uploads and downloads; previously uploads looped forever and downloads kept only the last chunk. Thanks @OskarEichler [#85, #29]
+
+=== 4.1.1
+
+* Allow net-ssh 8
+* Fix frozen string literal compatibility [npezza93, mfazekas]
+  - Use mutable string for scp command construction
+  - Use mutable string for error_string initialization
+* Add Ruby 3.4 and ruby-head to CI matrix
+* Add Ruby 4.0+ compatibility (logger, rdoc gems)
+* Drop EOL Ruby 2.3-2.5 from CI
+
+=== 3.0.0
+
+* NetSHH 6.* support
+
+
+=== 2.0.0
+
+* NetSSH 5.* support
+
+=== 1.2.1 / 30 Apr 2014
+
+* Resign gem with new pubkey
+
+=== 1.2.0 / 11 Apr 2014
+
+* Get the error string during download [jkeiser]
+
+=== 1.1.2 / 6 Jul 2013
+
+* Explicit convert to string in shellescape [jwils]
+
+=== 1.1.1 / 13 May 2013
+
+* Allow passing a shell to use when executing scp. [Arthur Schreiber]
+
+=== 1.1.0 / 06 Feb 2013
+
+* Added public cert. All gem releases are now signed. See INSTALL in readme.
+
+=== 1.0.4 / 16 Sep 2010
+
+* maintain filename sanitization compatibility with ruby 1.8.6 [Sung Pae, Tim Charper]
+
+=== 1.0.3 / 17 Aug 2010
+
+* replace :sanitize_file_name with a call to String#shellescape [Sung Pae]
+* Added gemspec file and removed echoe dependency [Miron Cuperman, Delano Mandelbaum]
+* Removed Hanna dependency in Rakefile [Delano Mandelbaum]
+
+
+=== 1.0.2 / 4 Feb 2009
+
+* Escape spaces in file names on remote server [Jamis Buck]
+
+
+=== 1.0.1 / 29 May 2008
+
+* Make sure downloads open the file in binary mode to appease Windows [Jamis Buck]
+
+
+=== 1.0.0 / 1 May 2008
+
+* Pass the channel object as the first argument to the progress callback [Jamis Buck]
+
+
+=== 1.0 Preview Release 1 (0.99.0) / 22 Mar 2008
+
+* Birthday!

@@ -1,0 +1,19 @@
+current directory: /home/runner/work/rails-template/rails-template/rails-api/postgres-rspec/8.1-latest/vendor/bundle/ruby/3.4.0/gems/debug-1.11.1/ext/debug
+/opt/hostedtoolcache/Ruby/3.4.8/x64/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /home/runner/work/rails-template/rails-template/rails-api/postgres-rspec/8.1-latest/vendor/bundle/ruby/3.4.0/gems/debug-1.11.1/ext/debug
+make DESTDIR\= sitearchdir\=./.gem.20261026-2427-n4oj7k sitelibdir\=./.gem.20261026-2427-n4oj7k clean
+
+current directory: /home/runner/work/rails-template/rails-template/rails-api/postgres-rspec/8.1-latest/vendor/bundle/ruby/3.4.0/gems/debug-1.11.1/ext/debug
+make DESTDIR\= sitearchdir\=./.gem.20261026-2427-n4oj7k sitelibdir\=./.gem.20261026-2427-n4oj7k
+compiling debug.c
+compiling iseq_collector.c
+linking shared-object debug/debug.so
+
+current directory: /home/runner/work/rails-template/rails-template/rails-api/postgres-rspec/8.1-latest/vendor/bundle/ruby/3.4.0/gems/debug-1.11.1/ext/debug
+make DESTDIR\= sitearchdir\=./.gem.20261026-2427-n4oj7k sitelibdir\=./.gem.20261026-2427-n4oj7k install
+/usr/bin/install -c -m 0755 debug.so ./.gem.20261026-2427-n4oj7k/debug
+
+current directory: /home/runner/work/rails-template/rails-template/rails-api/postgres-rspec/8.1-latest/vendor/bundle/ruby/3.4.0/gems/debug-1.11.1/ext/debug
+make DESTDIR\= sitearchdir\=./.gem.20261026-2427-n4oj7k sitelibdir\=./.gem.20261026-2427-n4oj7k clean

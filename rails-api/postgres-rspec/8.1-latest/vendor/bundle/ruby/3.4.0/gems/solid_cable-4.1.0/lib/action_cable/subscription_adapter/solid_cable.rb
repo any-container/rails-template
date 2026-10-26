@@ -1,0 +1,205 @@
+# frozen_string_literal: true
+
+require "action_cable/subscription_adapter/base"
+require "action_cable/subscription_adapter/channel_prefix"
+require "action_cable/subscription_adapter/subscriber_map"
+require "concurrent/atomic/semaphore"
+
+module ActionCable
+  module SubscriptionAdapter
+    class SolidCable < ::ActionCable::SubscriptionAdapter::Base
+      prepend ::ActionCable::SubscriptionAdapter::ChannelPrefix
+
+      def initialize(*)
+        super
+        @mutex =
+          if defined?(@server)
+            @server.mutex
+          else
+            Mutex.new
+          end
+
+        @listener = nil
+        @broadcaster = nil
+      end
+
+      def broadcast(channel, payload)
+        broadcaster.broadcast(channel, payload)
+      end
+
+      def subscribe(channel, subscriber, success_callback = nil)
+        listener.add_subscriber(channel, subscriber, success_callback)
+      end
+
+      def unsubscribe(channel, subscriber)
+        listener.remove_subscriber(channel, subscriber)
+      end
+
+      def shutdown
+        @broadcaster&.shutdown
+        @listener&.shutdown
+      end
+
+      private
+        def listener
+          @listener || @mutex.synchronize do
+            @listener ||= Listener.new(self, pubsub_executor)
+          end
+        end
+
+        def broadcaster
+          @broadcaster || @mutex.synchronize do
+            @broadcaster ||= ::SolidCable::BatchedBroadcaster.new
+          end
+        end
+
+        def pubsub_executor
+          @pubsub_executor ||=
+            if respond_to?(:executor, true)
+              executor
+            else
+              @server.event_loop
+            end
+        end
+
+        class Listener < ::ActionCable::SubscriptionAdapter::SubscriberMap
+          CONNECTION_ERRORS = [
+            ActiveRecord::ConnectionFailed,
+            ActiveRecord::ConnectionTimeoutError,
+            ActiveRecord::ConnectionNotEstablished
+          ]
+          Stop = Class.new(Exception)
+
+          delegate :logger, to: :@adapter
+
+          def initialize(adapter, executor)
+            super()
+            @adapter = adapter
+            @executor = executor
+
+            # Critical section begins with 0 permits. It can be understood as
+            # being "normally held" by the listener thread. It is released
+            # for specific sections of code, rather than acquired.
+            @critical = Concurrent::Semaphore.new(0)
+
+            @reconnect_attempt = 0
+            @last_id = last_message_id
+
+            @thread = Thread.new do
+              Thread.current.name = "solid_cable_listener"
+              Thread.current.report_on_exception = true
+
+              begin
+                listen
+              rescue *CONNECTION_ERRORS
+                retry if retry_connecting?
+              end
+            end
+          end
+
+          def listen
+            loop do
+              begin
+                instance = interruptible { Rails.application.executor.run! }
+                with_polling_volume { broadcast_messages }
+              ensure
+                instance.complete! if instance
+              end
+
+              interruptible { sleep ::SolidCable.polling_interval }
+            end
+          rescue Stop
+          ensure
+            @critical.release
+          end
+
+          def interruptible
+            @critical.release
+            yield
+          ensure
+            @critical.acquire
+          end
+
+          def shutdown
+            @critical.acquire
+            # We have the critical permit, and so the listen thread must be
+            # safe to interrupt.
+            thread.raise(Stop)
+            @critical.release
+            thread.join
+          end
+
+          def add_channel(channel, on_success)
+            channels[::SolidCable::Message.channel_hash_for(channel)] = last_message_id
+            on_success.call if on_success
+          end
+
+          def remove_channel(channel)
+            channels.delete(::SolidCable::Message.channel_hash_for(channel))
+          end
+
+          def invoke_callback(*)
+            executor.post { super }
+          end
+
+          private
+            attr_reader :executor, :thread
+            attr_accessor :last_id, :reconnect_attempt
+
+            def last_message_id
+              ::SolidCable::Message.maximum(:id) || 0
+            end
+
+            def channels
+              @channels ||= Concurrent::Map.new
+            end
+
+            def broadcast_messages
+              ::SolidCable::Message.
+                broadcastable(channels.keys, last_id).each do |message|
+                  should_broadcast_message = false
+                  channels.compute_if_present(message.channel_hash) do |channel_last_id|
+                    break if channel_last_id >= message.id
+
+                    should_broadcast_message = true
+                    message.id
+                  end
+
+                  broadcast(message) if should_broadcast_message
+                  self.last_id = message.id
+                end
+
+              self.reconnect_attempt = 0
+            end
+
+            def broadcast(message)
+              super(message.channel, message.payload)
+            end
+
+            def with_polling_volume
+              if ::SolidCable.silence_polling? && ActiveRecord::Base.logger
+                ActiveRecord::Base.logger.silence { yield }
+              else
+                yield
+              end
+            end
+
+            def reconnect_attempts
+              @reconnect_attempts ||= ::SolidCable.reconnect_attempts
+            end
+
+            def retry_connecting?
+              self.reconnect_attempt += 1
+
+              return false if reconnect_attempt > reconnect_attempts.size
+
+              sleep_t = reconnect_attempts[reconnect_attempt - 1]
+
+              sleep(sleep_t) if sleep_t > 0
+
+              true
+            end
+        end
+    end
+  end
+end
