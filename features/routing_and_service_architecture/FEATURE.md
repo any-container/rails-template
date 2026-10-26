@@ -16,6 +16,7 @@ The template:
 - Copies `AGENTS.md` to the app root.
 - Copies `STANDARDS.md` into `app/controllers`, `app/controllers/concerns`, `app/jobs`, `app/models`, `app/services`, `app/relations`, `app/repos`, `app/views`.
 - Symlinks these to `AGENTS.md`: `CLAUDE.md`, `GEMINI.md`, `CONVENTIONS.md` (Aider), `.cursorrules`, `.windsurfrules`, `.clinerules`, `.rules` (Zed), `.github/copilot-instructions.md`. Any that already exist are left untouched.
+- Copies `spec/architecture/standards_spec.rb`, which checks that the 8 `STANDARDS.md` files exist and that `AGENTS.md` mentions each.
 - Makes no gem, route, or initializer edits. Runs no migrations.
 
 The symlinks are also present in `files/`, but Thor copies symlinks as regular files, so the template excludes them from the copy and recreates them with `create_link`.
@@ -32,4 +33,4 @@ None.
 Documentation only. Agents read `AGENTS.md`, then the `STANDARDS.md` in the folder they are editing.
 
 ## Testing
-No code, so no specs. Verify by injecting into a scratch copy of a template app, confirming every `STANDARDS.md` and agent-file symlink lands, and that a second run changes nothing.
+The injected spec `spec/architecture/standards_spec.rb` runs with the host app's suite (`bundle exec rspec`). Verify by injecting into a scratch copy of a template app, confirming every `STANDARDS.md` and agent-file symlink lands, and that a second run changes nothing.
