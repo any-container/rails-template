@@ -1,0 +1,7 @@
+pkg
+doc
+coverage
+ri
+*.swp
+Gemfile.lock
+lib/net/sftp/version.rb.old

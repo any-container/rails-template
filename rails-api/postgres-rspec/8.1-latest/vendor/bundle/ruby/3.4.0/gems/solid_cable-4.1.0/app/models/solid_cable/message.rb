@@ -1,0 +1,36 @@
+# frozen_string_literal: true
+
+module SolidCable
+  class Message < SolidCable::Record
+    include Encryption
+
+    scope :trimmable, lambda {
+      where(created_at: ...::SolidCable.message_retention.ago)
+    }
+    scope :broadcastable, lambda { |channel_hashes, last_id|
+      select(column_names.excluding("created_at", "updated_at")).
+        where(channel_hash: channel_hashes).where(id: (last_id.to_i + 1)..).order(:id)
+    }
+
+    class << self
+      def broadcast(channel, payload)
+        insert({ created_at: Time.current, channel:, payload:,
+          channel_hash: channel_hash_for(channel) })
+      end
+
+      def broadcast_batch(broadcasts)
+        created_at = Time.current
+        insert_all broadcasts.map { |message|
+          { created_at:, channel: message.channel,
+            payload: message.payload, channel_hash: channel_hash_for(message.channel) }
+        }
+      end
+
+      # Need to unpack this as a signed integer since Postgresql and SQLite
+      # don't support unsigned integers
+      def channel_hash_for(channel)
+        Digest::SHA256.digest(channel.to_s).unpack1("q>")
+      end
+    end
+  end
+end

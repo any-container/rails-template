@@ -1,0 +1,330 @@
+# frozen_string_literal: true
+
+module AnnotateRb
+  module ModelAnnotator
+    class ModelWrapper
+      # Should be the wrapper for an ActiveRecord model that serves as the source of truth of the model
+      # of the model that we're annotating
+
+      DEFAULT_TIMESTAMP_COLUMNS = %w[created_at updated_at]
+
+      def initialize(klass, options)
+        @klass = klass
+        @options = options
+      end
+
+      # Gets the columns of the ActiveRecord model, processes them, and then returns them.
+      def columns
+        @columns ||=
+          begin
+            cols = raw_columns
+            cols += translated_columns
+
+            ignore_columns = @options[:ignore_columns]
+            if ignore_columns
+              cols = cols.reject do |col|
+                col.name.match?(/#{ignore_columns}/)
+              end
+            end
+
+            cols = cols.sort_by(&:name) if @options[:sort]
+            cols = classified_sort(cols, @options[:grouped_polymorphic]) if @options[:classified_sort]
+
+            cols
+          end
+      end
+
+      def connection
+        if @klass.respond_to?(:lease_connection)
+          @klass.lease_connection
+        else
+          @klass.connection
+        end
+      end
+
+      def database_name
+        connection.pool.db_config.name
+      end
+
+      # Returns the unmodified model columns
+      def raw_columns
+        @raw_columns ||= @klass.columns
+      end
+
+      def primary_key
+        @klass.primary_key
+      end
+
+      def table_exists?
+        @klass.table_exists?
+      end
+
+      def table_comments
+        connection.table_comment(@klass.table_name)
+      end
+
+      def has_table_comments?
+        connection.respond_to?(:table_comment) &&
+          connection.table_comment(@klass.table_name).present?
+      end
+
+      # Returns column defaults for annotations.
+      #
+      # `Model#column_defaults` reflects `attribute :foo, default: X` overrides,
+      # which would incorrectly show the Ruby-side default in annotations
+      # instead of the DB schema default. To preserve model-level decorations
+      # such as enum labels or `TimeZoneConverter` on datetime columns, we start
+      # from `column_defaults` and only substitute the DB schema value for
+      # attributes whose raw default was replaced.
+      def column_defaults
+        @column_defaults ||= @klass.column_defaults.each_with_object({}) do |(name, value), result|
+          column = @klass.columns_hash[name]
+          result[name] = if attribute_default_overridden?(name, column)
+            schema_default_for(column)
+          else
+            enum_default(name, column, value)
+          end
+        end
+      end
+
+      # Add columns managed by the globalize gem if this gem is being used.
+      # TODO: Audit if this is still needed, it seems like Globalize gem is no longer maintained
+      def translated_columns
+        return [] unless @klass.respond_to?(:translation_class)
+
+        ignored_cols = ignored_translation_table_columns
+
+        @klass.translation_class.columns.reject do |col|
+          ignored_cols.include? col.name.to_sym
+        end
+      end
+
+      def table_name
+        @klass.table_name
+      end
+
+      def model_name
+        @klass.name.underscore
+      end
+
+      # Calculates the max width of the schema for the model by looking at the columns, schema comments, with respect
+      # to the options.
+      def max_schema_info_width
+        @max_schema_info_width ||=
+          begin
+            cols = columns
+
+            position_of_column_comment = @options.with_default_fallback(:position_of_column_comment)
+            if with_comments? && position_of_column_comment == :with_name
+              column_widths = cols.map do |column|
+                column.name.size + (column.comment ? Helper.width(column.comment) : 0)
+              end
+
+              max_size = column_widths.max || 0
+              max_size += 2
+            else
+              max_size = cols.map(&:name).map(&:size).max
+            end
+
+            max_size += @options[:format_rdoc] ? 5 : 1
+
+            max_size
+          end
+      end
+
+      def is_column_primary_key?(column_name)
+        return false unless primary_key
+
+        Array(primary_key).map(&:to_sym).include?(column_name.to_sym)
+      end
+
+      def built_attributes
+        @built_attributes ||= begin
+          table_indices = retrieve_indexes_from_table
+          columns.map do |column|
+            is_primary_key = is_column_primary_key?(column.name)
+            column_indices = table_indices.select { |ind| ind.columns.include?(column.name) }
+            built = ColumnAnnotation::AttributesBuilder.new(column, @options, is_primary_key, column_indices, column_defaults).build
+            [column.name, built]
+          end.to_h
+        end
+      end
+
+      def retrieve_indexes_from_table
+        @indexes_from_table ||= _retrieve_indexes_from_table
+      end
+
+      def _retrieve_indexes_from_table
+        table_name = @klass.table_name
+        return [] unless table_name
+
+        indexes = connection.indexes(table_name)
+        return indexes if indexes.any? || !@klass.table_name_prefix
+
+        # Try to search the table without prefix
+        table_name_without_prefix = table_name.to_s.sub(@klass.table_name_prefix.to_s, "")
+        begin
+          connection.indexes(table_name_without_prefix)
+        rescue ActiveRecord::StatementInvalid => _e
+          # Mysql2 adapter behaves differently than Sqlite3 and Postgres adapter.
+          # If `table_name_without_prefix` does not exist, Mysql2 will raise,
+          # the other adapters will return an empty array.
+          #
+          # See: https://github.com/rails/rails/issues/51205
+          []
+        end
+      end
+
+      def with_comments?
+        return @with_comments if instance_variable_defined?(:@with_comments)
+
+        @with_comments =
+          @options[:with_comment] &&
+          @options[:with_column_comments] &&
+          raw_columns.first.respond_to?(:comment) &&
+          raw_columns.map(&:comment).any? { |comment| !comment.nil? }
+      end
+
+      def position_of_column_comment
+        @position_of_column_comment ||= @options[:position_of_column_comment]
+      end
+
+      def classified_sort(cols, grouped_polymorphic)
+        rest_cols = []
+        timestamps = []
+        associations = []
+        id = nil
+
+        # specs don't load defaults, so ensure we have defaults here
+        timestamp_columns = @options[:timestamp_columns] || DEFAULT_TIMESTAMP_COLUMNS
+
+        col_names = cols.map(&:name)
+
+        cols.each do |c|
+          if c.name.eql?("id")
+            id = c
+          elsif timestamp_columns.include?(c.name)
+            timestamps << c
+          elsif c.name[-3, 3].eql?("_id")
+            associations << c
+          elsif c.name[-5, 5].eql?("_type") && col_names.include?(c.name.sub(/_type$/, "_id")) && grouped_polymorphic
+            # This is a polymorphic association's type column
+            associations << c
+          else
+            rest_cols << c
+          end
+        end
+
+        timestamp_order = timestamp_columns.each_with_index.to_h
+        timestamps.sort_by! { |col| timestamp_order[col.name] }
+        [rest_cols, associations].each { |a| a.sort_by!(&:name) }
+
+        ([id] << rest_cols << timestamps << associations).flatten.compact
+      end
+
+      # These are the columns that the globalize gem needs to work but
+      # are not necessary for the models to be displayed as annotations.
+      def ignored_translation_table_columns
+        [
+          :id,
+          :created_at,
+          :updated_at,
+          :locale,
+          @klass.name.foreign_key.to_sym
+        ]
+      end
+
+      def enum_types
+        @enum_types ||=
+          if connection.respond_to?(:enum_types)
+            begin
+              # enum values may be a String or an Array depending on the Rails version.
+              # See: https://github.com/rails/rails/pull/54141
+              connection.enum_types.map do |name, values|
+                [name, values.is_a?(Array) ? values : values.to_s.split(",")]
+              end
+            rescue ActiveRecord::StatementInvalid
+              []
+            end
+          else
+            []
+          end
+      end
+
+      def migration_version
+        return 0 unless @options[:include_version]
+
+        # Multi-database support: Cache migration versions per database connection to handle
+        # different schema versions across primary/secondary databases correctly.
+        # Example: primary → "current_version_primary", secondary → "current_version_secondary"
+        cache_key = "current_version_#{database_name}".to_sym
+
+        if @options.get_state(cache_key).nil?
+          migration_version = begin
+            # Rails 7.1+ moved migration_context from ConnectionAdapter to ConnectionPool.
+            # ConnectionAdapter#migration_context was removed in Rails 7.2.
+            # See: https://github.com/rails/rails/pull/51162
+            if connection.pool.respond_to?(:migration_context)
+              connection.pool.migration_context.current_version
+            else
+              connection.migration_context.current_version
+            end
+          rescue
+            0
+          end
+
+          @options.set_state(cache_key, migration_version)
+        end
+
+        @options.get_state(cache_key)
+      end
+
+      private
+
+      # `attribute :foo, default: X` replaces the raw default Rails read from
+      # the DB column, so comparing the two raw values detects the override.
+      # Comparing cast values instead would misreport decorated attribute types
+      # (an enum casts the DB default `0` into its label) as overrides.
+      def attribute_default_overridden?(name, column)
+        return false if column.nil?
+
+        @klass._default_attributes[name].value_before_type_cast != column.default
+      end
+
+      # An enum attribute type casts the raw DB default into its label, which is
+      # what `column_defaults` reports and what annotations have historically
+      # shown. `enum_default_format` picks between that label, the raw value,
+      # and both.
+      def enum_default(name, column, label)
+        return label unless @klass.defined_enums.key?(name)
+
+        raw = schema_default_for(column)
+        return label if raw == label
+
+        case @options[:enum_default_format]
+        when :raw then raw
+        when :both then ColumnAnnotation::EnumDefault.new(raw, label)
+        else label
+        end
+      end
+
+      def schema_default_for(column)
+        return nil if column.nil? || column.default.nil? || column.default_function
+        cast_type_for(column).deserialize(column.default)
+      end
+
+      # Rails post-8.1 exposes `Column#cast_type` directly; Rails 8.1 introduced
+      # the transitional `Column#fetch_cast_type(connection)`; older versions
+      # required `connection.lookup_cast_type_from_column(column)`.
+      def cast_type_for(column)
+        if column.respond_to?(:cast_type)
+          column.cast_type
+        elsif column.respond_to?(:fetch_cast_type)
+          column.fetch_cast_type(connection)
+        else
+          connection.lookup_cast_type_from_column(column)
+        end
+      end
+    end
+  end
+end
