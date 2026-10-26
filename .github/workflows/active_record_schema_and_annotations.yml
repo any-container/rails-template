@@ -52,14 +52,18 @@ jobs:
           fi
       - name: Annotate models
         run: bundle exec annotaterb models
+      # Stage only the files these steps write. bundler-cache installs gems into vendor/bundle inside the
+      # app directory, which is not git-ignored, so never stage the whole directory.
       - name: Commit schema.rb and annotations if changed
+        env:
+          PATHS: db/schema.rb app spec
         run: |
-          if [ -z "$(git status --porcelain -- .)" ]; then
+          if [ -z "$(git status --porcelain -- $PATHS)" ]; then
             echo "Schema and annotations are unchanged; nothing to commit."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- .
+          git add -- $PATHS
           git commit -m "Add or update schema.rb and model annotations"
           git push origin "HEAD:${{ inputs.ref }}"
