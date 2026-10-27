@@ -10,16 +10,17 @@ RSpec.describe "STANDARDS.md files" do
     app/repos
     app/services
     app/views
+    spec
   ]
 
   let(:agents_md) { Rails.root.join("AGENTS.md").read }
 
-  it "has one for each of the 8 app folders" do
-    found = Dir.glob(Rails.root.join("app/**/STANDARDS.md")).map do |path|
+  it "has one for each of the 9 folders" do
+    found = (Dir.glob(Rails.root.join("app/**/STANDARDS.md")) + Dir.glob(Rails.root.join("spec/STANDARDS.md"))).map do |path|
       Pathname(path).relative_path_from(Rails.root).dirname.to_s
     end
 
-    expect(folders.size).to eq(8)
+    expect(folders.size).to eq(9)
     expect(found).to match_array(folders)
   end
 

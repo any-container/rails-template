@@ -14,9 +14,9 @@ Run from the host app root:
 
 The template:
 - Copies `AGENTS.md` to the app root.
-- Copies `STANDARDS.md` into `app/controllers`, `app/controllers/concerns`, `app/jobs`, `app/models`, `app/services`, `app/relations`, `app/repos`, `app/views`.
+- Copies `STANDARDS.md` into `app/controllers`, `app/controllers/concerns`, `app/jobs`, `app/models`, `app/services`, `app/relations`, `app/repos`, `app/views`, `spec`.
 - Symlinks these to `AGENTS.md`: `CLAUDE.md`, `GEMINI.md`, `CONVENTIONS.md` (Aider), `.cursorrules`, `.windsurfrules`, `.clinerules`, `.rules` (Zed), `.github/copilot-instructions.md`. Any that already exist are left untouched.
-- Copies `spec/architecture/standards_spec.rb`, which checks that the 8 `STANDARDS.md` files exist and that `AGENTS.md` mentions each.
+- Copies `spec/architecture/standards_spec.rb`, which checks that the 9 `STANDARDS.md` files exist and that `AGENTS.md` mentions each.
 - Makes no gem, route, or initializer edits. Runs no migrations.
 
 The symlinks are also present in `files/`, but Thor copies symlinks as regular files, so the template excludes them from the copy and recreates them with `create_link`.
