@@ -2,7 +2,7 @@
 
 ## Standards
 
-Every folder in `app/` has a `STANDARDS.md` with the best practices for that part of the codebase.
+Every folder in `app/`, and `spec/`, has a `STANDARDS.md` with the best practices for that part of the codebase.
 
 Read those files before making changes in that part of the codebase.
 
@@ -16,5 +16,6 @@ Read those files before making changes in that part of the codebase.
 | `app/repos` | `app/repos/STANDARDS.md` |
 | `app/services` | `app/services/STANDARDS.md` |
 | `app/views` | `app/views/STANDARDS.md` |
+| `spec` | `spec/STANDARDS.md` |
 
 Where a standard says to ask the user, ask before proceeding.
