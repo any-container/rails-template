@@ -5,7 +5,7 @@ Status: draft
 Registration flow that creates a username and password in a new identity table, and a login that authenticates against that table.
 
 ## Requirements
-- Rails: TBD
+- Rails: 8.0 or later
 - Database: PostgreSQL (Active Record)
 - Gems: `bcrypt`
 
@@ -53,4 +53,4 @@ Inputs: username, password.
 - Login rate limiting and lockout. The host app handles throttling (for example Rack::Attack or Rails `rate_limit`).
 
 ## Open questions
-- Rails version support, to fill in Requirements.
+None.
