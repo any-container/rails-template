@@ -12,17 +12,18 @@ RSpec only. Pick the spec type by what is being verified.
 - Never stub the class under test.
 - External HTTP: VCR.
 - No minimum coverage is enforced.
+- Test data: ROM-based builders in `spec/support/builders`. Each builder inserts through the ROM relations and returns the record. Do not use FactoryBot or fixtures.
 
 ## By layer
 
 - Services: integration specs against a real database. Do not mock repos.
 - Jobs: test only that the job calls its service, and that the arguments passed are scalars.
+- Repos and relations: integration specs against a real database. Do not stub the ROM gateway.
 - Views (Jbuilder): no view specs. Cover them through request specs.
 
 ## Open
 
 Not yet defined. Ask the user before choosing a strategy:
 
-- Repos and relations
-- Test data (factories or builders)
+- Builder helpers (traits, sequences)
 - Any other part of Rails not listed above
