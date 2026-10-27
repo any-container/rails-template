@@ -2,7 +2,7 @@
 
 Status: draft
 
-Registration flow that creates a username and password in a new identity table, and an OIDC-compliant login that authenticates against that table.
+Registration flow that creates a username and password in a new identity table, and a login that authenticates against that table.
 
 ## Requirements
 - Rails: TBD
@@ -40,26 +40,15 @@ Inputs: username, password.
 
 - Looks up the identity by username and verifies the password against the bcrypt digest.
 - Failure returns one generic error for every failure cause (unknown username, wrong password). The response does not reveal whether the user exists. Response time should not distinguish the causes (run a dummy bcrypt comparison when the user is not found).
-- Success issues OIDC tokens (see below).
-
-## OIDC compliance
-
-Scope TBD. Minimum surface if the app acts as an OpenID Provider:
-- Authorization code flow with PKCE.
-- Endpoints: authorization, token, userinfo.
-- Discovery document at `/.well-known/openid-configuration`.
-- JWKS endpoint for ID token verification.
-- ID token claims from the identity: `sub`, `preferred_username`, `email`, `given_name`, `family_name`, `name`.
+- Success result (session, token, or other) TBD. See open questions.
 
 ## Open questions
-- Is the app the OpenID Provider (issues tokens), or a relying party delegating to another provider? This draft assumes provider.
-- OIDC library: `doorkeeper` plus `doorkeeper-openid_connect`, or hand-built?
 - Table and model name: `identities`, with the feature prefix?
 - Email normalization rules: downcase and strip only, or also strip plus-tags and dots?
 - Username normalization and case sensitivity for uniqueness.
 - Password policy: minimum length, complexity.
 - Email verification after registration: in scope?
 - Rate limiting and lockout on login failures.
-- Does registration return tokens, or does the user log in afterward?
-- Is the API-only template compatible with the hosted login and consent pages the authorization endpoint needs?
+- What does a successful login return or establish: session cookie, token, other?
+- Does registration log the user in, or does the user log in afterward?
 - Account enumeration on registration: uniqueness errors reveal that a username or email exists. Accept, or mask?
