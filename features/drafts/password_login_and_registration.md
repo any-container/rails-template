@@ -2,7 +2,7 @@
 
 Status: draft
 
-Registration with a username and password in the email identity table, and a login that authenticates against that table.
+Registration with a username and password, and a login that authenticates against them. Identities live in `email_identities`. Passwords live in a separate table.
 
 ## Requirements
 - Rails: 8.0 or later
@@ -12,22 +12,40 @@ Registration with a username and password in the email identity table, and a log
 
 ## Email identity table
 
-Table `email_identities`, model `EmailIdentity`. The feature prefix is not applied. `email_link_login` also uses this table. Each feature creates it if it does not exist and adds only the columns it needs, so either feature may be injected first or alone.
+Table `email_identities`, model `EmailIdentity`. The feature prefix is not applied. `email_link_login` also uses this table, with the identical definition, so either feature may be injected first or alone.
 
 | Column | Required | Unique | Notes |
 |--------|----------|--------|-------|
 | username | yes | yes | May or may not be an email. Unique case-insensitively (unique index on `lower(username)`). Login lookup is case-insensitive. |
 | display_email | yes | yes | As supplied by the user. Never set by the backend. |
 | normalized_email | yes | yes | Derived by the backend from `display_email`. Never supplied by the client. |
-| password_digest | no at the database level | no | bcrypt, per-password salt. Plaintext is never stored. Added by this feature. Nullable so identities created through `email_link_login` need no password. Registration requires a password. |
 | surname | no | no | |
 | given_name | yes | no | |
 
 The repo exposes a `full_name` helper combining given name and surname. Surname is optional, so the helper returns the given name alone when surname is blank.
 
+Injection rule, shared with `email_link_login`:
+- If `email_identities` does not exist, the template creates it.
+- If it exists and matches the definition exactly, the template skips creating it.
+- If it exists and does not match exactly, the template fails with an error and changes nothing.
+- The same rule applies to the `EmailIdentity` model file.
+
 ### Email normalization
 
 All addresses are stripped and downcased. For Gmail addresses (`gmail.com`, `googlemail.com`), the normalized form also removes dots from the local part and drops any `+tag` suffix. Other providers keep dots and plus-tags.
+
+## Email identity password table
+
+Table `email_identity_passwords`, model `EmailIdentityPassword`. The feature prefix is not applied. Created by this feature only.
+
+| Column | Required | Unique | Notes |
+|--------|----------|--------|-------|
+| email_identity_id | yes | yes | Foreign key to `email_identities`. One password per identity. |
+| password_digest | yes | no | bcrypt, per-password salt. Plaintext is never stored. |
+| created_at | yes | no | |
+| updated_at | yes | no | |
+
+An email identity created through `email_link_login` has no row here.
 
 ## Registration
 
@@ -39,14 +57,15 @@ Inputs: username, display email, password, password confirmation, given name, su
 - Username, display email, and normalized email must each be unique. Violations return field-level validation errors (for example "has already been taken"). This discloses that a username or email exists; accepted.
 - Password must be at least 12 characters. No complexity rules. Maximum 72 bytes, the bcrypt input limit.
 - The password is hashed with bcrypt before persistence.
+- The identity row and the password row are created in one transaction.
 - Registration returns the created identity. It does not log the user in.
 
 ## Login
 
 Inputs: username, password.
 
-- Looks up the email identity by username and verifies the password against the bcrypt digest.
-- Failure returns one generic error for every failure cause (unknown username, wrong password, identity with no password). The response does not reveal whether the user exists. Response time should not distinguish the causes (run a dummy bcrypt comparison when the user is not found or has no password).
+- Looks up the email identity by username, then its password row, and verifies the password against the bcrypt digest.
+- Failure returns one generic error for every failure cause (unknown username, wrong password, identity with no password row). The response does not reveal whether the user exists. Response time should not distinguish the causes (run a dummy bcrypt comparison when the user or the password row is not found).
 - Success starts the session through `session`.
 
 ## Out of scope
@@ -55,6 +74,5 @@ Inputs: username, password.
 - Login rate limiting and lockout. The host app handles throttling (for example Rack::Attack or Rails `rate_limit`).
 
 ## Open questions
-- `EmailIdentity` and its migration are defined in both this draft and `email_link_login`. Both would copy the same model file to the same path. How are the shared files kept identical, or does the second injection skip them?
 - Revisit the `email_identities` table (deferred by the user to later in this session).
 - Can an email identity without a password set one later? Through what flow, given that there is no email verification?
