@@ -127,7 +127,6 @@ jobs:
           key: rails-gems-${{ inputs.variant }}-${{ runner.os }}-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: Install Postgres driver
-        if: inputs.variant == 'postgres-rspec'
         run: |
           gem install pg
       - name: Create new rails app
@@ -240,7 +239,7 @@ jobs:
           branch: ${{ inputs.variant }}-${{ needs.setup-rails.outputs.minor }}-latest-changes
           title: ${{ inputs.variant }} changes (Rails ${{ env.RAILS_VERSION }})
 
-  # Only variants with a database have a schema.rb to maintain (or-rspec has no Active Record)
+  # Only variants with Active Record models have a schema.rb to maintain (or-rspec uses Active Record only for Solid Queue)
   active-record-schema-and-annotations:
     needs: [setup-rails, create-pr]
     # Only when create-pr created or updated a PR branch
