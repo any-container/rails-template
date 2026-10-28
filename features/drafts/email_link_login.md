@@ -7,9 +7,8 @@ Passwordless login. The user enters a username and receives an email containing 
 ## Requirements
 - Rails: 8.0 or later
 - Database: required
-- Depends on: `session`
-- Email infrastructure: a working email delivery setup (Action Mailer delivery method and provider) is required. This feature does not provide the provider.
-- Sender address: required, supplied as the ENV variable `EMAIL_LINK_SENDER_ADDRESS`.
+- Depends on: `session`, `email`
+- Email infrastructure, sender address (`EMAIL_SENDER_ADDRESS`), and the base mailer: provided by `email`.
 - Background jobs: Solid Queue, the default per `app/jobs/STANDARDS.md` (installed by `session`)
 
 ## Email identity table
@@ -64,8 +63,8 @@ Inputs: username, display email, given name, surname (optional).
 6. The session is started through `session`.
 
 ## Mailer
-- This feature owns the mailer and the email template for the login link.
-- The "from" address is read from `EMAIL_LINK_SENDER_ADDRESS`. It has no default. The feature does not send without it.
+- This feature owns the login link mailer and its email template. The mailer inherits from `ApplicationMailer` (provided by `email`).
+- The "from" address and the requirement that it be set come from `email` (`EMAIL_SENDER_ADDRESS`).
 
 ## Request endpoint
 - Input: username.
