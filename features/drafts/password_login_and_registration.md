@@ -56,4 +56,5 @@ Inputs: username, password.
 
 ## Open questions
 - `EmailIdentity` and its migration are defined in both this draft and `email_link_login`. Both would copy the same model file to the same path. How are the shared files kept identical, or does the second injection skip them?
+- Revisit the `email_identities` table (deferred by the user to later in this session).
 - Can an email identity without a password set one later? Through what flow, given that there is no email verification?
