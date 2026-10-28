@@ -2,8 +2,12 @@
 or-rspec
 
 # Options
-# "OR" is Hanami's OR, the Ruby library (not yet added). Persistence is left to it, so no Active Record.
---skip-active-record
+# "OR" is Hanami's OR, the Ruby library (not yet added). Persistence is left to it.
+# Active Record is kept only for Solid Queue (and the Solid Cache and Solid Cable that Rails 8 generates with it),
+# so there are no Active Record models. Active Storage and Action Text are skipped.
+--database=postgresql
+--skip-active-storage
+--skip-action-text
 --api
 --skip-test
 --skip-action-mailer
