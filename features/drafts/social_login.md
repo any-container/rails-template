@@ -6,9 +6,9 @@ Login with Google or Facebook. A first successful social login registers the use
 
 ## Requirements
 - Rails: 8.0 or later
-- Database: PostgreSQL (Active Record)
+- Database: required
 - Depends on: `session`
-- Gems: TBD (see open questions)
+- Gems: `omniauth`, `omniauth-google-oauth2`, `omniauth-facebook`
 
 ## Providers
 - Google
@@ -40,15 +40,7 @@ There is no username and no password.
 - The session is started through `session`.
 - Social identities are never matched or merged with email identities.
 
-## Out of scope
-- Passwords. See `password_login_and_registration`.
-- Email link login. See `email_link_login`.
-- Linking a social identity to an email identity.
-- Email verification by this app.
-- Login rate limiting. The host app handles throttling.
-
 ## Open questions
-- Library: `omniauth` with `omniauth-google-oauth2` and `omniauth-facebook`, or hand-built OAuth 2.0 / OIDC client?
 - Does the API-only template support the redirect flow, or is a browser front end assumed?
 - Credentials (client id and secret per provider) configuration, for example Rails credentials or env vars.
 - Does the provider profile refresh on each login, or is it stored once at registration?
