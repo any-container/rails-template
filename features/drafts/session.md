@@ -7,7 +7,7 @@ Shared session for every login feature. A successful login of any kind creates t
 ## Requirements
 - Rails: 8.0 or later
 - Database: PostgreSQL (Active Record)
-- Gems: none
+- Gems: `solid_queue`
 
 ## Feature order
 
@@ -33,16 +33,28 @@ Table `sessions`, model `Session`. The feature prefix is not applied.
 Unique index on `(identity_type, identity_id)` enforces one session per identity.
 | token_digest | yes | yes | Digest of the cookie token. |
 | last_active_at | yes | no | Updated by authenticated traffic, at most once per 5 minutes. |
-| expires_at | yes | no | `last_active_at` plus the lifetime. |
+| created_at | yes | no | Login time. Anchors the absolute maximum age. |
+| expires_at | yes | no | The earlier of `last_active_at` plus the lifetime and `created_at` plus the maximum age. |
 
 ## Lifetime
-- Default lifetime is 4 hours, configurable.
+- Idle lifetime defaults to 4 hours.
+- Absolute maximum age defaults to 24 hours, counted from login. Activity never extends a session past it.
 - Any authenticated request keeps the session alive: it moves `last_active_at` and `expires_at` forward by the lifetime (sliding expiry).
 - The extension is throttled. A request updates the row only when `last_active_at` is at least 5 minutes old. Idle expiry is therefore between the lifetime minus 5 minutes and the lifetime.
 - An expired session is rejected.
 
+## Configuration
+
+| ENV variable | Default | Meaning |
+|--------------|---------|---------|
+| `SESSION_LIFETIME_SECONDS` | `14400` (4 hours) | Idle lifetime, extended by authenticated traffic. |
+| `SESSION_MAX_AGE_SECONDS` | `86400` (24 hours) | Absolute maximum age from login. |
+
+Variable names and the seconds format are proposed, not yet confirmed.
+
 ## Cleanup
-- A scheduled job runs every 5 minutes and deletes expired session rows.
+- A recurring job runs every 5 minutes and deletes expired session rows. It is scheduled with Solid Queue (`config/recurring.yml`), the default scheduler per `app/jobs/STANDARDS.md`.
+- Requires Solid Queue (see Requirements).
 
 ## Out of scope
 - Any login mechanism. See the login drafts.
@@ -50,6 +62,6 @@ Unique index on `(identity_type, identity_id)` enforces one session per identity
 
 ## Open questions
 - CSRF protection for the cookie session. Open.
-- Is there an absolute maximum session age regardless of activity?
-- Scheduler: Solid Queue recurring tasks (Rails 8 default), or host-provided?
+- Confirm the ENV variable names and the seconds format.
+- Solid Queue needs a database. Confirm the queue database setup for the template apps.
 - "Remember me".
