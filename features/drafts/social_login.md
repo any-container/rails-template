@@ -9,6 +9,14 @@ Login with Google or Facebook. A first successful social login registers the use
 - Database: required
 - Depends on: `session`
 - Gems: `omniauth`, `omniauth-google-oauth2`, `omniauth-facebook`
+- A Google app and a Facebook app, each registered with its provider, with the client id and client secret supplied as ENV variables:
+
+| ENV variable | Value |
+|--------------|-------|
+| `GOOGLE_CLIENT_ID` | Google app client id. |
+| `GOOGLE_CLIENT_SECRET` | Google app client secret. |
+| `FACEBOOK_CLIENT_ID` | Facebook app id. |
+| `FACEBOOK_CLIENT_SECRET` | Facebook app secret. |
 
 ## Providers
 - Google
@@ -37,11 +45,10 @@ There is no username and no password.
 - The app validates the result and reads the provider's user id (`uid`) and profile (email, given name, surname).
 - If a social identity exists for `(provider, uid)`, the user is logged in as that identity.
 - If none exists, a social identity is created from the provider profile, then the user is logged in. This is registration.
+- On every successful login, the stored `email`, `given_name`, and `surname` are overwritten with the provider's current values, including when the provider returns none.
 - The session is started through `session`.
 - Social identities are never matched or merged with email identities.
+- A user who logs in with both Google and Facebook has two unrelated social identities, one per provider. This is accepted. The two are never linked, even when the provider emails match.
 
 ## Open questions
 - Does the API-only template support the redirect flow, or is a browser front end assumed?
-- Credentials (client id and secret per provider) configuration, for example Rails credentials or env vars.
-- Does the provider profile refresh on each login, or is it stored once at registration?
-- A user who logs in with both Google and Facebook gets two unrelated identities. Accepted?
