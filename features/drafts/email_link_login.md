@@ -8,7 +8,8 @@ Passwordless login. The user enters a username and receives an email containing 
 - Rails: 8.0 or later
 - Database: required
 - Depends on: `session`
-- Mailer: Action Mailer with a delivery method configured by the host
+- Email infrastructure: a working email delivery setup (Action Mailer delivery method and provider) is required. This feature does not provide the provider.
+- Sender address: required. A configured "from" address for the login link email.
 - Background jobs: Solid Queue, the default per `app/jobs/STANDARDS.md` (installed by `session`)
 
 ## Email identity table
@@ -62,6 +63,10 @@ Inputs: username, display email, given name, surname (optional).
 5. The POST validates and consumes the token and creates the session.
 6. The session is started through `session`.
 
+## Mailer
+- This feature owns the mailer and the email template for the login link.
+- The sender address is required and is set through configuration. The feature does not send without it.
+
 ## Request endpoint
 - Input: username.
 - The response is identical whether or not the username exists, matching the login rule that existence is never revealed. Response time does not distinguish the cases because the lookup, token creation, and mail delivery happen in the job.
@@ -89,5 +94,5 @@ Inputs: username, display email, given name, surname (optional).
 - Rate limiting on the request endpoint. Tracked in [#82](https://github.com/any-container/rails-template/issues/82).
 
 ## Open questions
-- Mailer template and sender address ownership: feature or host?
+- How is the sender address configured: an ENV variable (name TBD), Rails credentials, or an initializer setting?
 - The landing page in an API-only app: is it a front end route that posts to the consume endpoint, or does the app render it?
