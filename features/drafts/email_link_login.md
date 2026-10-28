@@ -9,7 +9,7 @@ Passwordless login. The user enters a username and receives an email containing 
 - Database: required
 - Depends on: `session`
 - Email infrastructure: a working email delivery setup (Action Mailer delivery method and provider) is required. This feature does not provide the provider.
-- Sender address: required. A configured "from" address for the login link email.
+- Sender address: required, supplied as the ENV variable `EMAIL_LINK_SENDER_ADDRESS`.
 - Background jobs: Solid Queue, the default per `app/jobs/STANDARDS.md` (installed by `session`)
 
 ## Email identity table
@@ -65,7 +65,7 @@ Inputs: username, display email, given name, surname (optional).
 
 ## Mailer
 - This feature owns the mailer and the email template for the login link.
-- The sender address is required and is set through configuration. The feature does not send without it.
+- The "from" address is read from `EMAIL_LINK_SENDER_ADDRESS`. It has no default. The feature does not send without it.
 
 ## Request endpoint
 - Input: username.
@@ -94,5 +94,4 @@ Inputs: username, display email, given name, surname (optional).
 - Rate limiting on the request endpoint. Tracked in [#82](https://github.com/any-container/rails-template/issues/82).
 
 ## Open questions
-- How is the sender address configured: an ENV variable (name TBD), Rails credentials, or an initializer setting?
 - The landing page in an API-only app: is it a front end route that posts to the consume endpoint, or does the app render it?
