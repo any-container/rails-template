@@ -26,6 +26,17 @@ This feature needs these columns. Definitions match `password_login_and_registra
 
 This feature does not add `password_digest`.
 
+## Registration
+
+Registration has no password.
+
+Inputs: username, display email, given name, surname (optional).
+
+- All inputs except surname are required.
+- The backend normalizes the display email to produce the normalized email, using the rule in `password_login_and_registration`. The client does not submit it.
+- Username, display email, and normalized email must each be unique. Violations return field-level validation errors. This discloses that a username or email exists; accepted.
+- On success the identity is created and the login link email is sent immediately (see Flow). Registration does not log the user in.
+
 ## Flow
 1. The user submits a username to a request endpoint.
 2. If an email identity exists, the app emails a login link to that identity's display email.
@@ -52,9 +63,9 @@ This feature does not add `password_digest`.
 - Expiry duration (for example 10 or 15 minutes).
 - Link click via email scanners: a GET that consumes the token can be burned by link-preview bots. Use a GET landing page that confirms with a POST?
 - Same browser requirement: must the link be opened in the browser that requested it?
-- This feature has no registration flow, so an email-link-only app has no way to create `email_identities`. Does this feature register on first request, depend on a registration flow, or leave creation to the host?
 - `EmailIdentity` and its migration are defined in both this draft and `password_login_and_registration`. Both would copy the same model file to the same path. How are the shared files kept identical, or does the second injection skip them?
 - Rate limiting on the request endpoint to prevent email flooding. Login rate limiting is out of scope in the other drafts; is it in scope here?
 - Email identities without a password use this flow. The `password_digest` column is absent or nullable when only this feature is injected. Confirm.
 - Mailer template and sender address ownership: feature or host?
 - Is username entry the only input, or may the user enter an email?
+- Revisit the `email_identities` table (deferred by the user to later in this session).
