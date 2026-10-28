@@ -7,14 +7,30 @@ Passwordless login. The user enters a username and receives an email containing 
 ## Requirements
 - Rails: 8.0 or later
 - Database: PostgreSQL (Active Record)
-- Depends on: `social_login` (the `identities` table and the session)
+- Depends on: `session`
 - Mailer: Action Mailer with a delivery method configured by the host
+
+## Email identity table
+
+Table `email_identities`, model `EmailIdentity`. The feature prefix is not applied. `password_login_and_registration` also uses this table. Each feature creates it if it does not exist and adds only the columns it needs, so either feature may be injected first or alone.
+
+This feature needs these columns. Definitions match `password_login_and_registration`.
+
+| Column | Required | Unique |
+|--------|----------|--------|
+| username | yes | yes (case-insensitive) |
+| display_email | yes | yes |
+| normalized_email | yes | yes |
+| given_name | yes | no |
+| surname | no | no |
+
+This feature does not add `password_digest`.
 
 ## Flow
 1. The user submits a username to a request endpoint.
-2. If an identity exists, the app emails a login link to that identity's display email.
+2. If an email identity exists, the app emails a login link to that identity's display email.
 3. The user opens the link. The link targets a new endpoint, which validates the token and creates the session.
-4. The session is established through `social_login`, the same signed session cookie as every other login.
+4. The session is started through `session`.
 
 ## Request endpoint
 - Input: username.
@@ -36,8 +52,9 @@ Passwordless login. The user enters a username and receives an email containing 
 - Expiry duration (for example 10 or 15 minutes).
 - Link click via email scanners: a GET that consumes the token can be burned by link-preview bots. Use a GET landing page that confirms with a POST?
 - Same browser requirement: must the link be opened in the browser that requested it?
-- Social identities have a provider email, possibly unverified. Is it a trusted destination for login links?
+- This feature has no registration flow, so an email-link-only app has no way to create `email_identities`. Does this feature register on first request, depend on a registration flow, or leave creation to the host?
+- `EmailIdentity` and its migration are defined in both this draft and `password_login_and_registration`. Both would copy the same model file to the same path. How are the shared files kept identical, or does the second injection skip them?
 - Rate limiting on the request endpoint to prevent email flooding. Login rate limiting is out of scope in the other drafts; is it in scope here?
-- Independent of `password_login_and_registration`. Can an identity created only through this feature's dependency (social login) use this flow without ever setting a password? Assumed yes.
+- Email identities without a password use this flow. The `password_digest` column is absent or nullable when only this feature is injected. Confirm.
 - Mailer template and sender address ownership: feature or host?
 - Is username entry the only input, or may the user enter an email?
