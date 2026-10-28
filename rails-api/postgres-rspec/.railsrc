@@ -5,6 +5,5 @@ postgres-rspec
 --database=postgresql
 --api
 --skip-test
---skip-action-mailer
 --skip-action-mailbox
 --force
