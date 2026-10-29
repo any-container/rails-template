@@ -35,4 +35,3 @@ Shared outbound email for every feature that sends mail. A feature that sends em
 
 ## Open questions
 - Does the feature ship a test-mode delivery setup (for example `:test` delivery method in the test environment), or leave it to the host?
-- API-only apps: does the template enable Action Mailer if the API template omits it?
