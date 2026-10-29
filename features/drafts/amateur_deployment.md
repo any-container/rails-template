@@ -2,17 +2,17 @@
 
 Status: draft
 
-Deploys a Rails app to a single Hetzner Cloud server with Kamal. The server is provisioned by the `hetzner_infrastructure` feature. Postgres is an external managed service, not run on the host.
+Deploys a Rails app to a single DigitalOcean Droplet with Kamal. The Droplet is provisioned by the `digitalocean_infrastructure` feature. Postgres is DigitalOcean Managed Databases, not run on the Droplet.
 
 ## Motivation
-Side projects need low hosting cost with a simple, repeatable deploy. One small Hetzner VPS (about $5/month) running the app, plus a managed Postgres free or entry tier, is cheaper than Heroku, Render, or AWS managed stacks. Kamal is the Rails default deployer and needs only SSH and Docker. Managed Postgres removes backup, patching, and restore work from the owner.
+Side projects need low hosting cost with a simple, repeatable deploy. One small Droplet (about $5/month) running the app, plus the smallest DigitalOcean Managed Postgres plan, is cheaper than Heroku or AWS managed stacks, and keeps app and database on one provider and private network. Verify current plan prices before building. Kamal is the Rails default deployer and needs only SSH and Docker. Managed Postgres removes backup, patching, and restore work from the owner.
 
 ## Requirements
 - Rails: 8.0+ (Kamal is bundled with the Rails 8 generator)
-- Database: PostgreSQL, managed service reached via `DATABASE_URL`
+- Database: PostgreSQL, DigitalOcean Managed Databases, reached via `DATABASE_URL`
 - Gems: `kamal`, `~> 2.0`
-- Features: `hetzner_infrastructure` (draft, not yet written) provisions the server, SSH key, and firewall, and owns Terraform state, server type, region, and OS updates. This feature takes the server's address and SSH access as inputs.
-- Accounts: Hetzner Cloud project and API token, managed Postgres provider account, container registry (e.g. GitHub Container Registry), a domain name for TLS
+- Features: `digitalocean_infrastructure` (draft, not yet written) provisions the Droplet, SSH key, firewall, and managed Postgres cluster, and owns Terraform state, Droplet size, region, and OS updates. This feature takes the Droplet's address, SSH access, and `DATABASE_URL` as inputs.
+- Accounts: DigitalOcean account and API token, container registry (e.g. GitHub Container Registry), a domain name for TLS
 
 ## Scope
 Included:
@@ -25,13 +25,12 @@ Included:
 Excluded:
 - High availability, multiple hosts, load balancers
 - Self-managed Postgres on the host, and Postgres backups (the managed provider owns them)
-- Provisioning the managed Postgres via Terraform (the owner creates it and supplies `DATABASE_URL`)
 - Staging/production environment splits
 - Monitoring and alerting beyond container health checks
 - CI-driven deploys (candidate follow-up feature)
-- Server provisioning, Terraform, and Terraform state (see `hetzner_infrastructure`)
-- Non-Hetzner hosting providers
+- Droplet and database provisioning, Terraform, and Terraform state (see `digitalocean_infrastructure`)
+- Non-DigitalOcean hosting providers
 
 ## Open questions
-- Managed Postgres provider? Hetzner has no managed Postgres. Candidates: Neon, Supabase, DigitalOcean Managed Postgres, AWS RDS. Latency between a Hetzner region and the provider region matters.
-- What does `hetzner_infrastructure` hand to this feature (host address, SSH user, key path), and in what form?
+- What does `digitalocean_infrastructure` hand to this feature (host address, SSH user, key path, `DATABASE_URL`), and in what form?
+- Use the Droplet and database private network (VPC) address in `DATABASE_URL`, with the database trusted-sources list limited to the Droplet?
