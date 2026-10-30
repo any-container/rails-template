@@ -13,6 +13,7 @@ RSpec only. Pick the spec type by what is being verified.
 - External HTTP: VCR.
 - No minimum coverage is enforced.
 - Test data: ROM-based builders in `spec/support/builders`. Each builder inserts through the ROM relations and returns the record. Do not use FactoryBot or fixtures.
+- Hash keys: symbols (`key: value`), not hash rockets. Use `=>` only for non-symbol or computed keys. ENV keys are strings: convert at the ENV boundary (`.to_s`). See `AGENTS.md`.
 
 ## By layer
 
