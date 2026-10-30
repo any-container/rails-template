@@ -16,10 +16,13 @@ The template:
 - Copies `AGENTS.md` to the app root.
 - Copies `STANDARDS.md` into `app/controllers`, `app/controllers/concerns`, `app/jobs`, `app/models`, `app/services`, `app/relations`, `app/repos`, `app/views`, `spec`.
 - Symlinks these to `AGENTS.md`: `CLAUDE.md`, `GEMINI.md`, `CONVENTIONS.md` (Aider), `.cursorrules`, `.windsurfrules`, `.clinerules`, `.rules` (Zed), `.github/copilot-instructions.md`. Any that already exist are left untouched.
-- Copies `spec/architecture/standards_spec.rb`, which checks that the 9 `STANDARDS.md` files exist and that `AGENTS.md` mentions each.
+- Copies `spec/architecture/standards_spec.rb`, which checks that the 9 `STANDARDS.md` files exist and that `AGENTS.md` mentions each, and that no Ruby file in `app/` or `spec/` writes a symbol key with a hash rocket.
 - Makes no gem, route, or initializer edits. Runs no migrations.
 
 The symlinks are also present in `files/`, but Thor copies symlinks as regular files, so the template excludes them from the copy and recreates them with `create_link`.
+
+## Hash syntax
+`AGENTS.md` and the `STANDARDS.md` files for services, repos, relations, views, and spec require symbolized keys (`key: value`). `=>` is allowed only for non-symbol or computed keys. ENV keys must be strings; convert at the ENV boundary with `.to_s`, as `feature_registry` does. The injected spec flags symbol-key rockets. Rubocop's `Style/HashSyntax` (enabled in `rubocop-rails-omakase`) enforces the same rule in the host app.
 
 ## Host follow-up (not done by the template)
 The conventions conflict with the stock template app. The template never deletes host code, so these are manual:
