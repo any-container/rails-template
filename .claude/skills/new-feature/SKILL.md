@@ -18,6 +18,7 @@ features/<feature_name>/
     config/...
     db/migrate/...
     spec/...
+    features/<feature_name>.md   # registry description (see below)
 ```
 
 - `<feature_name>` is snake_case.
@@ -34,7 +35,7 @@ features/<feature_name>/
    - Migrations: use timestamped names and `ActiveRecord::Migration[<target version>]`. Prefix table names with the feature name.
    - Assume only what `FEATURE.md` lists as requirements (Rails version, database, gems).
 5. Write RSpec specs in `files/spec/` covering the feature's behaviour.
-6. Write `template.rb` (see below).
+6. Write `files/features/<feature_name>.md` with front matter `always_on`, `depends_on` (other feature names, `feature_registry` is implied), and `gems`. Write `template.rb` (see below), which also appends `FEATURE_<NAME>` to `features/0-manifest.yml`. See `features/feature_registry/FEATURE.md`. Gate the feature's routes, jobs and entry points on `Features.enabled?(:<feature_name>)`.
 7. Verify by injecting into a scratch copy of a template app under `rails-api/` (never in place): run `bin/rails app:template LOCATION=<path>/features/<feature_name>/template.rb`, then `bin/rails db:migrate` and `bundle exec rspec`. Run the template a second time to confirm it is safe to re-run. Report failures; do not mark the feature done on a failing run.
 8. Complete `FEATURE.md` (below).
 9. Add a row to the "Feature index" table in `features/CONTEXT.md`: feature name, one-line summary, and a link to `<feature_name>/FEATURE.md`. If the feature changes the routing (a new kind of task), update the routing table too. The feature is not done until this row exists.
