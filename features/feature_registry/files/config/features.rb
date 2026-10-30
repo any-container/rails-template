@@ -20,7 +20,7 @@ module Features
 
     # Sets each manifest entry in ENV unless the environment already defines it.
     def load_env!
-      manifest.each { |key, value| @env[key] = value.to_s unless @env.key?(key) }
+      manifest.each { |key, value| @env[key.to_s] = value.to_s unless @env.key?(key.to_s) }
     end
 
     def names = definitions.keys
@@ -43,7 +43,7 @@ module Features
 
     def validate!
       errors = []
-      keys = manifest.keys
+      keys = manifest.keys.map(&:to_s)
       names.each { |name| errors << "#{name}: no #{env_key(name)} in #{MANIFEST}" unless keys.include?(env_key(name)) }
       keys.each { |key| errors << "#{key}: no description file in features/" unless names.any? { |name| env_key(name) == key } }
       definitions.each_value do |definition|
@@ -69,7 +69,7 @@ module Features
 
     def manifest
       path = @dir.join(MANIFEST)
-      path.exist? ? (YAML.safe_load_file(path) || {}) : {}
+      path.exist? ? (YAML.safe_load_file(path, symbolize_names: true) || {}) : {}
     end
 
     def definitions
@@ -81,12 +81,12 @@ module Features
 
     def parse(name, path)
       match = path.read.match(/\A---\n(.*?)^---\n/m) or raise Invalid, "#{path.basename}: missing front matter"
-      meta = YAML.safe_load(match[1]) || {}
+      meta = YAML.safe_load(match[1], symbolize_names: true) || {}
       Definition.new(
         name: name,
-        always_on: meta.fetch("always_on", false),
-        depends_on: Array(meta["depends_on"]).map(&:to_sym),
-        gems: Array(meta["gems"]).map { |gem| gem.is_a?(Hash) ? gem : { "name" => gem } }
+        always_on: meta.fetch(:always_on, false),
+        depends_on: Array(meta[:depends_on]).map(&:to_sym),
+        gems: Array(meta[:gems]).map { |gem| gem.is_a?(Hash) ? gem : { name: gem } }
       )
     end
 
