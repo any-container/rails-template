@@ -22,7 +22,7 @@ The template:
 The symlinks are also present in `files/`, but Thor copies symlinks as regular files, so the template excludes them from the copy and recreates them with `create_link`.
 
 ## Hash syntax
-`AGENTS.md` and the `STANDARDS.md` files for services, repos, relations, views, and spec require symbolized keys (`key: value`). `=>` is allowed only for non-symbol or computed keys. ENV keys must be strings; convert at the ENV boundary with `.to_s`, as `feature_registry` does. The injected spec flags symbol-key rockets. Rubocop's `Style/HashSyntax` (enabled in `rubocop-rails-omakase`) enforces the same rule in the host app.
+`AGENTS.md` requires symbolized keys (`key: value`). ENV keys must be strings; convert at the ENV boundary with `.to_s`. The injected spec flags symbol-key rockets. Rubocop's `Style/HashSyntax` (enabled in `rubocop-rails-omakase`) enforces the same rule in the host app.
 
 ## Host follow-up (not done by the template)
 The conventions conflict with the stock template app. The template never deletes host code, so these are manual:
