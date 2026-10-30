@@ -2,11 +2,14 @@ require "rails_helper"
 require "tmpdir"
 
 RSpec.describe Features do
+  # ENV keys are strings; specs pass symbol-keyed variables.
+  def env(**vars) = vars.stringify_keys
+
   def build(manifest:, features:, env: {})
     dir = Pathname(Dir.mktmpdir)
-    dir.join(Features::MANIFEST).write(manifest.to_yaml)
+    dir.join(Features::MANIFEST).write(manifest.stringify_keys.to_yaml)
     features.each do |name, meta|
-      front = meta.empty? ? "" : meta.transform_keys(&:to_s).to_yaml.delete_prefix("---\n")
+      front = meta.empty? ? "" : meta.deep_stringify_keys.to_yaml.delete_prefix("---\n")
       dir.join("#{name}.md").write("---\n#{front}---\n# #{name}\n")
     end
     Features::Registry.new(dir: dir, env: env)
@@ -15,31 +18,31 @@ RSpec.describe Features do
   let(:features) do
     {
       base: { always_on: true },
-      extra: { depends_on: ["base"], gems: [{ "name" => "rotp", "version" => "~> 6.3" }] }
+      extra: { depends_on: ["base"], gems: [{ name: "rotp", version: "~> 6.3" }] }
     }
   end
-  let(:manifest) { { "FEATURE_BASE" => "true", "FEATURE_EXTRA" => "false" } }
+  let(:manifest) { { FEATURE_BASE: "true", FEATURE_EXTRA: "false" } }
 
   describe "Registry#load_env!" do
     it "sets manifest values in ENV and keeps values already set" do
-      env = { "FEATURE_EXTRA" => "true" }
-      build(manifest: manifest, features: features, env: env).load_env!
-      expect(env).to eq("FEATURE_BASE" => "true", "FEATURE_EXTRA" => "true")
+      vars = env(FEATURE_EXTRA: "true")
+      build(manifest: manifest, features: features, env: vars).load_env!
+      expect(vars).to eq(env(FEATURE_BASE: "true", FEATURE_EXTRA: "true"))
     end
   end
 
   describe "Registry#enabled?" do
     it "follows ENV" do
-      registry = build(manifest: manifest, features: features, env: { "FEATURE_EXTRA" => "on" })
+      registry = build(manifest: manifest, features: features, env: env(FEATURE_EXTRA: "on"))
       expect(registry.enabled?(:extra)).to be true
     end
 
     it "is false when toggled off" do
-      expect(build(manifest: manifest, features: features, env: { "FEATURE_EXTRA" => "false" }).enabled?(:extra)).to be false
+      expect(build(manifest: manifest, features: features, env: env(FEATURE_EXTRA: "false")).enabled?(:extra)).to be false
     end
 
     it "is true for an always_on feature whatever its ENV value" do
-      expect(build(manifest: manifest, features: features, env: { "FEATURE_BASE" => "false" }).enabled?(:base)).to be true
+      expect(build(manifest: manifest, features: features, env: env(FEATURE_BASE: "false")).enabled?(:base)).to be true
     end
 
     it "raises for an unknown feature" do
@@ -49,7 +52,7 @@ RSpec.describe Features do
 
   describe "Registry#gems" do
     it "lists the gems of every built feature" do
-      expect(build(manifest: manifest, features: features).gems).to eq([{ "name" => "rotp", "version" => "~> 6.3" }])
+      expect(build(manifest: manifest, features: features).gems).to eq([{ name: "rotp", version: "~> 6.3" }])
     end
   end
 
@@ -59,12 +62,12 @@ RSpec.describe Features do
     end
 
     it "fails when a feature has no manifest entry" do
-      registry = build(manifest: { "FEATURE_BASE" => "true" }, features: features)
+      registry = build(manifest: { FEATURE_BASE: "true" }, features: features)
       expect { registry.validate! }.to raise_error(Features::Invalid, /FEATURE_EXTRA/)
     end
 
     it "fails when a manifest entry has no description" do
-      registry = build(manifest: manifest.merge("FEATURE_GHOST" => "true"), features: features)
+      registry = build(manifest: manifest.merge(FEATURE_GHOST: "true"), features: features)
       expect { registry.validate! }.to raise_error(Features::Invalid, /FEATURE_GHOST/)
     end
 
@@ -75,7 +78,7 @@ RSpec.describe Features do
 
     it "fails on a dependency cycle" do
       registry = build(
-        manifest: { "FEATURE_A" => "false", "FEATURE_B" => "false" },
+        manifest: { FEATURE_A: "false", FEATURE_B: "false" },
         features: { a: { depends_on: ["b"] }, b: { depends_on: ["a"] } }
       )
       expect { registry.validate! }.to raise_error(Features::Invalid, /cycle/)
@@ -83,9 +86,9 @@ RSpec.describe Features do
 
     it "fails when a feature is on and its dependency is off" do
       registry = build(
-        manifest: { "FEATURE_A" => "true", "FEATURE_B" => "false" },
+        manifest: { FEATURE_A: "true", FEATURE_B: "false" },
         features: { a: { depends_on: ["b"] }, b: {} },
-        env: { "FEATURE_A" => "true", "FEATURE_B" => "false" }
+        env: env(FEATURE_A: "true", FEATURE_B: "false")
       )
       expect { registry.validate! }.to raise_error(Features::Invalid, /dependency b is off/)
     end
@@ -98,7 +101,7 @@ RSpec.describe Features do
 
     it "lists every feature gem in the Gemfile" do
       gemfile = Rails.root.join("Gemfile").read
-      missing = Features.gems.map { |gem| gem["name"] }.reject { |name| gemfile.match?(/^\s*gem ["']#{Regexp.escape(name)}["']/) }
+      missing = Features.gems.map { |gem| gem[:name] }.reject { |name| gemfile.match?(/^\s*gem ["']#{Regexp.escape(name)}["']/) }
       expect(missing).to be_empty
     end
   end

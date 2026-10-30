@@ -42,7 +42,7 @@ An `always_on` feature is enabled whatever its ENV value.
     Features.toggled?(:name)   # this feature's own switch only
     Features.built?(:name)     # a description file exists
     Features.names             # every built feature
-    Features.gems              # gems of every built feature, as hashes with "name" and optional "version"
+    Features.gems              # gems of every built feature, as hashes with `:name` and optional `:version`
 
 ## Adding a feature to the registry
 Every feature ships `files/features/<name>.md` with its front matter and appends its entry to the manifest in `template.rb`:
