@@ -24,3 +24,17 @@ AGENT_FILE_LINKS.each do |path, target|
   empty_directory File.dirname(path) unless File.dirname(path) == "."
   create_link path, target
 end
+
+# 3. Enforce symbolized hash keys (see AGENTS.md). Skipped when .rubocop.yml already configures the cop.
+HASH_SYNTAX_COP = <<~YAML
+
+  # Use `key: value`, not `:key => value`. See AGENTS.md.
+  Style/HashSyntax:
+    Enabled: true
+YAML
+
+if File.exist?(".rubocop.yml")
+  append_to_file ".rubocop.yml", HASH_SYNTAX_COP unless File.read(".rubocop.yml").include?("Style/HashSyntax")
+else
+  create_file ".rubocop.yml", HASH_SYNTAX_COP.lstrip
+end
