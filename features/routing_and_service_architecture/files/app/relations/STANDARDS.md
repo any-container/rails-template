@@ -9,4 +9,3 @@ ROM relations (`rom-sql`). One per table.
 - Reusable queries are named methods on the relation (e.g. `by_status`).
 - Query composition only. No business logic.
 - Only repos use relations.
-- Hash keys: symbols (`key: value`), not hash rockets. Use `=>` only for non-symbol or computed keys. ENV keys are strings: convert at the ENV boundary (`.to_s`). See `AGENTS.md`.
