@@ -17,9 +17,9 @@ stateDiagram-v2
     state "Merged<br/>ticket: ready-for-apps" as ReadyApps
     state "Injected<br/>ticket: ready-for-apps" as Injected
 
-    [*] --> NeedsInfo: draft
-    [*] --> ReadyAgent: draft
-    NeedsInfo --> ReadyAgent: answer
+    [*] --> NeedsInfo: draft - Human
+    [*] --> ReadyAgent: draft - Human
+    NeedsInfo --> ReadyAgent: answer - Human
     ReadyAgent --> ReadyHuman: build - Claude sched.
     ReadyHuman --> ReadyApps: merge<br/>GHA ticket-review
     ReadyApps --> Injected: inject<br/>GHA inject-features
