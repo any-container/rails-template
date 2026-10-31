@@ -1,0 +1,52 @@
+name: "Template tests"
+on:
+  push:
+    branches: [main]
+    paths:
+      - "rails-api/**"
+      - ".github/workflows/template-tests.yml"
+  pull_request:
+    paths:
+      - "rails-api/**"
+      - ".github/workflows/template-tests.yml"
+  workflow_dispatch:
+jobs:
+  test:
+    name: ${{ matrix.template }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        template:
+          - rails-api/postgres-rspec/8.1-latest
+          - rails-api/or-rspec/8.1-latest
+    defaults:
+      run:
+        working-directory: ${{ matrix.template }}
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      RAILS_ENV: test
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          working-directory: ${{ matrix.template }}
+          bundler-cache: true
+      - name: Set up database
+        run: bin/rails db:create db:schema:load
+      - name: Run tests
+        run: bundle exec rspec
