@@ -1,3 +1,4 @@
+# Application entry point: selects Rails frameworks and loads gems.
 require_relative "boot"
 
 require "rails"
