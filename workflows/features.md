@@ -57,26 +57,6 @@ flowchart TD
 | Inject | Proposed workflow | `ready-for-apps` ticket | A PR with the feature applied to the template apps | See [Injection](#injection). |
 | Clean up | Ticket review workflow | Draft whose feature is in every app | A PR deleting the draft, with `Closes #n` | Merge closes the ticket. |
 
-### Draft tickets
-
-| Draft state | Label |
-|-------------|-------|
-| No open questions | `ready-for-agent` |
-| Has open questions | `needs-info`. Answer the questions in the draft, then relabel `ready-for-agent`. |
-
-Tickets that exist for each draft:
-
-| Draft | Ticket |
-|-------|--------|
-| `email` | #91 |
-| `session` | #92 |
-| `email_link_login` | #93 |
-| `password_login_and_registration` | #94 |
-| `social_login` | #95 |
-| `amateur_deployment` | #96 |
-
-Dependent drafts (`session`, `email_link_login`, `password_login_and_registration`, `social_login`) must not be labelled `ready-for-agent` before the features they depend on are built.
-
 ## Daily build
 
 A scheduled task on the Claude account runs every day at 10:43 UTC. It:
