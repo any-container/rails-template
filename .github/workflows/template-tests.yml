@@ -57,7 +57,10 @@ jobs:
           working-directory: ${{ matrix.template }}
           bundler-cache: true
       - name: Set up database
-        run: bin/rails db:create db:schema:load
+        run: |
+          bin/rails db:create
+          # Templates without Active Record models (or-rspec) have no db/schema.rb.
+          if [[ -f db/schema.rb ]]; then bin/rails db:schema:load; fi
       - name: Run tests
         run: bundle exec rspec
   result:
