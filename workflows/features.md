@@ -80,9 +80,9 @@ Verification is done by the CI workflow that runs the tests on any PR that chang
 
 For an injection PR it runs the app's own test suite.
 
-`.github/workflows/test.yml` is currently a stub (manual trigger, prints a date). It must be implemented and triggered on `pull_request` for `features/**` and `rails-api/**`. A failing run returns the work to Build or Inject.
+No such workflow exists yet. It must trigger on `pull_request` for `features/**` and `rails-api/**`. A failing run returns the work to Build or Inject.
 
 ## Open items
 
-- Implement `test.yml`.
+- Create the CI workflow that tests PRs changing `features/**` or `rails-api/**`.
 - Call `inject-features.yml` from `fresh-api-app.yml`, and run the schema and annotations workflow after injection.
