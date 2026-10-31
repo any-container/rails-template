@@ -2,16 +2,26 @@ name: "Template tests"
 on:
   push:
     branches: [main]
-    paths:
-      - "rails-api/**"
-      - ".github/workflows/template-tests.yml"
   pull_request:
-    paths:
-      - "rails-api/**"
-      - ".github/workflows/template-tests.yml"
   workflow_dispatch:
 jobs:
+  changes:
+    name: Detect template changes
+    runs-on: ubuntu-24.04
+    outputs:
+      templates: ${{ steps.filter.outputs.templates }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            templates:
+              - "rails-api/**"
+              - ".github/workflows/template-tests.yml"
   test:
+    needs: changes
+    if: needs.changes.outputs.templates == 'true' || github.event_name == 'workflow_dispatch'
     name: ${{ matrix.template }}
     runs-on: ubuntu-24.04
     strategy:
@@ -50,3 +60,16 @@ jobs:
         run: bin/rails db:create db:schema:load
       - name: Run tests
         run: bundle exec rspec
+  result:
+    # Stable check name for the branch ruleset. Passes when tests pass or were skipped
+    # because no template changed; fails when any test job fails or is cancelled.
+    name: Template tests result
+    needs: [changes, test]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check results
+        run: |
+          echo "changes: ${{ needs.changes.result }}, test: ${{ needs.test.result }}"
+          [[ "${{ needs.changes.result }}" == "success" ]] &&
+          [[ "${{ needs.test.result }}" == "success" || "${{ needs.test.result }}" == "skipped" ]]
