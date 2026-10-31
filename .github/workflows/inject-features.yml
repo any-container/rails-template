@@ -1,0 +1,90 @@
+name: "Inject features"
+# Applies every feature in features/ to every template app (rails-api/<variant>/<minor>-latest), in dependency
+# order (see .github/scripts/feature_order.rb), and opens a PR with the result. Applying a feature that is
+# already present changes nothing, so this is safe to run at any time.
+# DRAFT: not yet called from fresh-api-app.yml. That workflow regenerates (and so wipes) the apps on each new
+# Rails patch release, so it must call this one afterwards, or the apps lose their features.
+# Runs after ticket-review so that tickets it just moved to ready-for-apps are picked up.
+on:
+  workflow_dispatch:
+  workflow_call:
+  schedule:
+    - cron: "30 18 * * *"
+permissions:
+  contents: read
+  issues: read
+jobs:
+  inject:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:11-alpine
+        ports:
+          - "5432:5432"
+        env:
+          POSTGRES_DB: rails_development
+          POSTGRES_USER: rails
+          POSTGRES_PASSWORD: password
+    env:
+      RAILS_ENV: development
+      DATABASE_URL: "postgres://rails:password@localhost:5432/rails_development"
+      # Keep installed gems out of the repo so they are never committed
+      BUNDLE_PATH: ${{ runner.temp }}/bundle
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      - name: Checkout code
+        uses: actions/checkout@v7
+      - name: Install Ruby
+        uses: ruby/setup-ruby@v1.329.0
+        with:
+          bundler: latest
+      - name: Work out the injection order
+        id: order
+        run: |
+          ruby .github/scripts/feature_order.rb | tee "$RUNNER_TEMP/order.txt"
+      # A template that hits a conflicting host file fails here (stdin is closed, so Thor cannot prompt)
+      # rather than overwriting host code
+      - name: Apply each feature to each app
+        run: |
+          for app in rails-api/*/*-latest; do
+            echo "::group::$app"
+            (
+              cd "$app"
+              bundle install
+              bin/rails db:create
+              while read -r feature; do
+                echo "Injecting $feature"
+                bin/rails app:template LOCATION="$GITHUB_WORKSPACE/features/$feature/template.rb" < /dev/null
+              done < "$RUNNER_TEMP/order.txt"
+            )
+            echo "::endgroup::"
+          done
+      - name: List tickets waiting on injection
+        id: tickets
+        run: |
+          refs=$(gh issue list --label ready-for-apps --state open --json number --jq '.[] | "Refs #\(.number)"')
+          {
+            echo "refs<<EOF"
+            echo "$refs"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+      # Only the apps' own files change; logs, tmp and storage are git-ignored
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          branch: inject-features
+          title: Inject features into the template apps
+          commit-message: Inject features into the template apps
+          add-paths: rails-api
+          body: |
+            Applies every feature in `features/` to each app in `rails-api/`, in dependency order.
+
+            ${{ steps.tickets.outputs.refs }}

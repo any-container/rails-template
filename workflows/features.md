@@ -10,7 +10,7 @@ Every draft has a GitHub ticket, linked on the draft's `Ticket:` line. Each stat
 
 ```mermaid
 stateDiagram-v2
-    direction LR
+    direction TB
     state "Drafted<br/>ticket: needs-info" as NeedsInfo
     state "Drafted<br/>ticket: ready-for-agent" as ReadyAgent
     state "Built, PR open<br/>ticket: ready-for-human" as ReadyHuman
@@ -21,9 +21,9 @@ stateDiagram-v2
     [*] --> ReadyAgent: draft
     NeedsInfo --> ReadyAgent: answer
     ReadyAgent --> ReadyHuman: build
-    ReadyHuman --> ReadyApps: merge
-    ReadyApps --> Injected: inject
-    Injected --> [*]: retire
+    ReadyHuman --> ReadyApps: merge<br/>GHA ticket-review
+    ReadyApps --> Injected: inject<br/>GHA inject-features
+    Injected --> [*]: retire<br/>GHA ticket-review
 ```
 
 | Verb | What it does |
@@ -59,15 +59,17 @@ Requires the `ready-for-apps` label (the workflow creates it if absent) and the 
 
 ## Injection
 
-A `ready-for-apps` ticket means the feature is merged and tested on its own, and is waiting to be applied to the template apps. Proposed process, not yet built:
+A `ready-for-apps` ticket means the feature is merged and tested on its own, and is waiting to be applied to the template apps. `.github/workflows/inject-features.yml` does it:
 
 1. Target apps: every `rails-api/<variant>/<minor>-latest` folder. Variants today: `postgres-rspec`, `or-rspec`.
-2. Order: `feature_registry` first. Then each feature after the features in its `depends_on` front matter (`files/features/<name>.md`). Ticket order does not decide this.
-3. Per app: run `bin/rails app:template LOCATION=features/<name>/template.rb`, then `bin/rails db:migrate`. The template is idempotent, so applying a feature already present changes nothing.
-4. Commit the result to a branch and open a PR. CI verifies it.
-5. After the merge, the app holds `features/<name>.md`. That file is what the ticket review workflow reads to decide the draft is injected.
+2. Order: `.github/scripts/feature_order.rb` puts `feature_registry` first, then each feature after the features in its `depends_on` front matter (`files/features/<name>.md`).
+3. Per app: `bin/rails app:template LOCATION=features/<name>/template.rb` for each feature in order. Templates are idempotent, so features already present change nothing. A template that hits a conflicting host file fails rather than overwriting it.
+4. The workflow opens a PR with the result and `Refs #n` for each `ready-for-apps` ticket. CI verifies it.
+5. After the merge, each app holds `features/<name>.md`. That file is what the ticket review workflow reads to decide a draft is injected.
 
-Problem to resolve: `fresh-api-app.yml` deletes and regenerates `rails-api/<variant>/<minor>-latest` on each new Rails patch release. Regeneration would remove every injected feature. The injection step must run again after regeneration, or `fresh-api-app.yml` must apply all indexed features as part of generation.
+It runs daily after the ticket review workflow, on demand, and as a callable workflow.
+
+Not yet wired: `fresh-api-app.yml` deletes and regenerates `rails-api/<variant>/<minor>-latest` on each new Rails patch release, which removes every injected feature. It must call `inject-features.yml` after regenerating. Also not yet wired: `db/schema.rb` and annotations for `postgres-rspec` after injection (`active_record_schema_and_annotations.yml`).
 
 ## Verification
 
@@ -82,6 +84,5 @@ For an injection PR it runs the app's own test suite.
 
 ## Open items
 
-- Injection flow diagram, including dependency order (`feature_registry` first).
-- Relationship diagram between `features/`, `rails-api/`, `.github/` workflows and `.claude/` skills.
-- Implement the injection workflow and `test.yml`.
+- Implement `test.yml`.
+- Call `inject-features.yml` from `fresh-api-app.yml`, and run the schema and annotations workflow after injection.
