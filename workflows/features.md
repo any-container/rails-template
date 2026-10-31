@@ -6,46 +6,34 @@ Status: draft. Tracked in [#90](https://github.com/any-container/rails-template/
 
 A feature moves from a draft to a feature injected in the template apps: draft, build, verify, inject, clean up.
 
-Every draft has a GitHub ticket, linked on the draft's `Ticket:` line. The ticket's label says who acts next.
+Every draft has a GitHub ticket, linked on the draft's `Ticket:` line. Each state below is a feature state and a ticket label.
 
 ```mermaid
-flowchart TD
-    Draft["Draft + ticket<br/>features/drafts/&lt;feature_name&gt;.md<br/>Ticket: #n"] --> Open{"Open questions<br/>in the draft?"}
-    Open -->|yes| NeedsInfo["needs-info"]
-    NeedsInfo -->|answered in draft| ReadyAgent
-    Open -->|no| ReadyAgent["ready-for-agent"]
+stateDiagram-v2
+    direction LR
+    state "Drafted<br/>ticket: needs-info" as NeedsInfo
+    state "Drafted<br/>ticket: ready-for-agent" as ReadyAgent
+    state "Built, PR open<br/>ticket: ready-for-human" as ReadyHuman
+    state "Merged<br/>ticket: ready-for-apps" as ReadyApps
+    state "Injected<br/>ticket: ready-for-apps" as Injected
 
-    ReadyAgent --> Daily["Daily scheduled agent<br/>picks the oldest ready-for-agent ticket"]
-
-    subgraph Build["Build (new-feature skill)"]
-        direction TB
-        B1["Check features/CONTEXT.md for overlap"] --> B2["Create features/&lt;feature_name&gt;/<br/>FEATURE.md, template.rb, files/"]
-        B2 --> B3["Write code and RSpec specs in files/"]
-        B3 --> B4["Write registry description<br/>files/features/&lt;feature_name&gt;.md"]
-        B4 --> B5["Add row to features/CONTEXT.md"]
-    end
-
-    Daily --> Build
-    Build --> PR["Pull request<br/>description: Refs #n"]
-    PR --> ReadyHuman["ready-for-human<br/>(set by the agent after the PR exists)"]
-
-    PR --> CI{"CI: tests run on PRs<br/>that change templates"}
-    CI -->|fail| Build
-    CI -->|pass| Review["Human reviews and merges"]
-    ReadyHuman --> Review
-
-    Review --> TR1["Ticket review workflow<br/>PR with Refs #n is merged"]
-    TR1 --> ReadyApps["ready-for-apps"]
-    ReadyApps --> Inject["Inject into every rails-api/ template app<br/>in dependency order"]
-    Inject --> PR2["Pull request with the injected apps"]
-    PR2 --> CI2{"CI: tests run on PRs<br/>that change templates"}
-    CI2 -->|fail| Inject
-    CI2 -->|pass| Merge2["Human merges"]
-
-    Merge2 --> TR2["Ticket review workflow<br/>finds draft already injected"]
-    TR2 --> PR3["Pull request deleting the draft<br/>Closes #n"]
-    PR3 --> Done(["Draft removed, ticket closed"])
+    [*] --> NeedsInfo: draft
+    [*] --> ReadyAgent: draft
+    NeedsInfo --> ReadyAgent: answer
+    ReadyAgent --> ReadyHuman: build
+    ReadyHuman --> ReadyApps: merge
+    ReadyApps --> Injected: inject
+    Injected --> [*]: retire
 ```
+
+| Verb | What it does |
+|------|--------------|
+| `draft` | A human writes the draft and opens its ticket; it starts at `needs-info` if the draft has open questions, otherwise `ready-for-agent`. |
+| `answer` | A human resolves the draft's open questions and relabels the ticket `ready-for-agent`. |
+| `build` | The daily agent builds the feature with `new-feature`, opens a PR with `Refs #n`, and relabels the ticket `ready-for-human`. |
+| `merge` | A human merges the PR, and the ticket review workflow relabels the ticket `ready-for-apps`. |
+| `inject` | The feature is applied to every `rails-api/` app in dependency order, in a PR that CI verifies. |
+| `retire` | The ticket review workflow's PR deletes the draft and closes the ticket. |
 
 ## Stages
 
