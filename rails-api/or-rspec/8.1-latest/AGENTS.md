@@ -16,6 +16,7 @@ Read those files before making changes in that part of the codebase.
 | `app/repos` | `app/repos/STANDARDS.md` |
 | `app/services` | `app/services/STANDARDS.md` |
 | `app/views` | `app/views/STANDARDS.md` |
+| `db/rom` | `db/rom/STANDARDS.md` |
 | `spec` | `spec/STANDARDS.md` |
 
 Where a standard says to ask the user, ask before proceeding.
