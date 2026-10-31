@@ -1,0 +1,100 @@
+name: "Ticket review"
+# Moves feature tickets along the lifecycle in workflows/features.md.
+# 1. ready-for-human -> ready-for-apps: the ticket is referenced in the description of a merged PR.
+# 2. Drafts already injected into every template app: open a PR that deletes the draft and closes its ticket.
+# DRAFT: needs the `ready-for-apps` label created in the repo, and APP_ID / APP_PRIVATE_KEY (as in fresh-api-app).
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 17 * * *"
+  pull_request:
+    types: [closed]
+    branches: [main]
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+jobs:
+  promote-tickets:
+    # On pull_request events, only merged PRs matter
+    if: github.event_name != 'pull_request' || github.event.pull_request.merged
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Ensure the ready-for-apps label exists
+        run: |
+          gh label create ready-for-apps --description "Merged; ready to inject into the rails-api template apps" || true
+      # The new-feature agent writes "Refs #<n>" (not "Closes"), so the ticket stays open until the draft is removed
+      - name: Move ready-for-human tickets referenced by a merged PR
+        run: |
+          for n in $(gh issue list --label ready-for-human --state open --json number --jq '.[].number'); do
+            merged=$(gh pr list --state merged --search "\"#$n\" in:body" --limit 100 --json body \
+              | jq --arg n "$n" '[.[] | select(.body | test("#" + $n + "([^0-9]|$)"))] | length')
+            if [ "$merged" -gt 0 ]; then
+              echo "#$n: referenced by a merged PR. ready-for-human -> ready-for-apps."
+              gh issue edit "$n" --remove-label ready-for-human --add-label ready-for-apps
+            fi
+          done
+
+  find-injected-drafts:
+    runs-on: ubuntu-24.04
+    outputs:
+      drafts: ${{ steps.scan.outputs.drafts }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+      # A draft is injected when its feature is built (features/<name>/) and every template app
+      # (rails-api/<variant>/<minor>-latest) holds the feature's registry description (features/<name>.md)
+      - name: List drafts whose feature is injected into every template app
+        id: scan
+        run: |
+          list='[]'
+          for draft in features/drafts/*.md; do
+            name=$(basename "$draft" .md)
+            [ "$name" = README ] && continue
+            [ -d "features/$name" ] || continue
+            ticket=$(grep -m1 -E '^Ticket: \[#[0-9]+\]' "$draft" | grep -oE '[0-9]+' | head -1)
+            [ -n "$ticket" ] || { echo "Draft $name has no Ticket line."; continue; }
+            injected=true
+            apps=(rails-api/*/*-latest)
+            for app in "${apps[@]}"; do
+              [ -f "$app/features/$name.md" ] || injected=false
+            done
+            if [ "$injected" = true ]; then
+              list=$(jq -c --arg name "$name" --arg ticket "$ticket" '. + [{name: $name, ticket: $ticket}]' <<< "$list")
+            fi
+          done
+          echo "drafts=$list" >> $GITHUB_OUTPUT
+
+  remove-injected-drafts:
+    needs: find-injected-drafts
+    if: needs.find-injected-drafts.outputs.drafts != '[]'
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        draft: ${{ fromJSON(needs.find-injected-drafts.outputs.drafts) }}
+    steps:
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      - name: Checkout code
+        uses: actions/checkout@v7
+      - name: Delete the draft
+        run: git rm "features/drafts/${{ matrix.draft.name }}.md"
+      # Closes #<n> closes the ticket when the PR merges
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          branch: remove-draft-${{ matrix.draft.name }}
+          title: Remove ${{ matrix.draft.name }} draft
+          commit-message: Remove ${{ matrix.draft.name }} draft
+          body: |
+            `${{ matrix.draft.name }}` is injected into every template app in `rails-api/`. Its draft is no longer needed.
+
+            Closes #${{ matrix.draft.ticket }}

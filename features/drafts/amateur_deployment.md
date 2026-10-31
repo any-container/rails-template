@@ -2,6 +2,8 @@
 
 Status: draft
 
+Ticket: [#96](https://github.com/any-container/rails-template/issues/96)
+
 Deploys a Rails app to a single DigitalOcean Droplet with Kamal. The Droplet is provisioned by the `digitalocean_infrastructure` feature. Postgres is DigitalOcean Managed Databases, not run on the Droplet.
 
 ## Motivation
