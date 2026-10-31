@@ -14,6 +14,8 @@ RSpec only. Pick the spec type by what is being verified.
 - No minimum coverage is enforced.
 - Test data: ROM-based builders in `spec/support/builders`. Each builder inserts through the ROM relations and returns the record. Do not use FactoryBot or fixtures.
 
+- Each example runs in a transaction that is rolled back (`spec/support/rom.rb`). Pending ROM migrations run once before the suite.
+
 ## By layer
 
 - Services: integration specs against a real database. Do not mock repos.

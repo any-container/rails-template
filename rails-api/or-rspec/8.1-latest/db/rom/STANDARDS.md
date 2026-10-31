@@ -4,6 +4,7 @@
 
 ## Rules
 
+- Run migrations with `bin/rails rom:migrate` (`VERSION=<n>` migrates to that version, `VERSION=0` reverts all). `bin/rails rom:status` shows whether any are pending. Versions are kept in `rom_schema_migrations`, not Active Record's `schema_migrations`.
 - Create tables with `ROM::SQL.migration` and `change` blocks. Use `up`/`down` only when `change` cannot reverse the operation.
 - One table per migration, named `YYYYMMDDHHMMSS_create_<table>.rb`.
 - Table names are plural snake_case. Columns are snake_case.
