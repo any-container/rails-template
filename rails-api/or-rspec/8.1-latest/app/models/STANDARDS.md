@@ -17,3 +17,7 @@ Active Record may be installed only to back Solid Queue, Solid Cache, and Solid 
 
 - `app/relations/STANDARDS.md`
 - `app/repos/STANDARDS.md`
+
+## Entities
+
+- One entity per table, singular (`User` for `users`), subclassing `ROM::Struct`.
