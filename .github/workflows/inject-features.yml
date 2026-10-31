@@ -28,8 +28,6 @@ jobs:
     env:
       RAILS_ENV: development
       DATABASE_URL: "postgres://rails:password@localhost:5432/rails_development"
-      # Keep installed gems out of the repo so they are never committed
-      BUNDLE_PATH: ${{ runner.temp }}/bundle
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
     steps:
@@ -41,6 +39,10 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: Checkout code
         uses: actions/checkout@v7
+      # Keep installed gems out of the repo so they are never committed. The runner context is not
+      # available in job-level env, so this is set here instead.
+      - name: Set bundle path
+        run: echo "BUNDLE_PATH=$RUNNER_TEMP/bundle" >> "$GITHUB_ENV"
       - name: Install Ruby
         uses: ruby/setup-ruby@v1.329.0
         with:
