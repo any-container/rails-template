@@ -2,6 +2,8 @@
 
 Status: draft
 
+Ticket: [#92](https://github.com/any-container/rails-template/issues/92)
+
 Shared session for every login feature. A successful login of any kind creates the session through this feature. It is keyed by identity type and identity id because identities live in separate tables.
 
 ## Requirements
