@@ -20,7 +20,7 @@ stateDiagram-v2
     [*] --> NeedsInfo: draft
     [*] --> ReadyAgent: draft
     NeedsInfo --> ReadyAgent: answer
-    ReadyAgent --> ReadyHuman: build
+    ReadyAgent --> ReadyHuman: build - Claude sched.
     ReadyHuman --> ReadyApps: merge<br/>GHA ticket-review
     ReadyApps --> Injected: inject<br/>GHA inject-features
     Injected --> [*]: retire<br/>GHA ticket-review
