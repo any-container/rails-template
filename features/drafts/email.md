@@ -2,6 +2,8 @@
 
 Status: draft
 
+Ticket: [#91](https://github.com/any-container/rails-template/issues/91)
+
 Shared outbound email for every feature that sends mail. A feature that sends email builds its own mailer on this feature's base mailer and sends through this feature's delivery path.
 
 ## Requirements

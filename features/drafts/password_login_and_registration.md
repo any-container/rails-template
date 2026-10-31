@@ -2,6 +2,8 @@
 
 Status: draft
 
+Ticket: [#94](https://github.com/any-container/rails-template/issues/94)
+
 Registration with a username and password, and a login that authenticates against them. Identities live in `email_identities`. Passwords live in a separate table.
 
 ## Requirements

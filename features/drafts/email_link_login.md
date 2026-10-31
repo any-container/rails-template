@@ -2,6 +2,8 @@
 
 Status: draft
 
+Ticket: [#93](https://github.com/any-container/rails-template/issues/93)
+
 Passwordless login. The user enters a username and receives an email containing a secure link. The link goes to a new endpoint that creates a session.
 
 ## Requirements
