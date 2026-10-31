@@ -35,16 +35,6 @@ stateDiagram-v2
 | `inject` | The feature is applied to every `rails-api/` app in dependency order, in a PR that CI verifies. |
 | `retire` | The ticket review workflow's PR deletes the draft and closes the ticket. |
 
-## Stages
-
-| Stage | Who | Input | Output | Gate to move on |
-|-------|-----|-------|--------|-----------------|
-| Draft | Human | Feature idea | `features/drafts/<feature_name>.md` with a `Ticket:` line; the ticket | Ticket exists, is named in the draft, and carries the right label (below). |
-| Build | Daily agent, `new-feature` skill | Oldest `ready-for-agent` ticket and its draft | `features/<feature_name>/` with `FEATURE.md`, `template.rb`, `files/`; a PR with `Refs #n` in the description | `FEATURE.md` complete; CONTEXT.md row added. Then the agent moves the ticket to `ready-for-human`. |
-| Verify | CI | The PR | Pass or fail | See [Verification](#verification). |
-| Inject | Proposed workflow | `ready-for-apps` ticket | A PR with the feature applied to the template apps | See [Injection](#injection). |
-| Clean up | Ticket review workflow | Draft whose feature is in every app | A PR deleting the draft, with `Closes #n` | Merge closes the ticket. |
-
 ## Daily build
 
 A scheduled task on the Claude account runs every day at 10:43 UTC. It:
@@ -95,4 +85,3 @@ For an injection PR it runs the app's own test suite.
 - Injection flow diagram, including dependency order (`feature_registry` first).
 - Relationship diagram between `features/`, `rails-api/`, `.github/` workflows and `.claude/` skills.
 - Implement the injection workflow and `test.yml`.
-- Update `features/CONTEXT.md` and the `new-feature` skill to match this workflow.
