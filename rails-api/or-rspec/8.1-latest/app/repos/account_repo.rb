@@ -39,8 +39,9 @@ class AccountRepo < ROM::Repository[:accounts]
 
   private
 
-  def owner_must_exist
-    yield
+  # The savepoint keeps a caller's open transaction usable after the failure.
+  def owner_must_exist(&)
+    transaction(savepoint: true, &)
   rescue ROM::SQL::ForeignKeyConstraintError
     raise OwnerNotFound, "owner does not exist"
   end
