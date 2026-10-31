@@ -27,8 +27,8 @@ features/<feature_name>/
 
 ## Steps
 
-1. Read `features/CONTEXT.md` and list `features/` to check for an existing or overlapping feature. Extend rather than duplicate.
-2. Confirm the feature name and scope with the user if either is ambiguous.
+1. If building from a ticket, read the issue and its linked `features/drafts/<feature_name>.md`. Read `features/CONTEXT.md` and list `features/` to check for an existing or overlapping feature. Extend rather than duplicate.
+2. Confirm the feature name and scope with the user if either is ambiguous. When building unattended from a ticket, the draft sets both.
 3. Create `features/<feature_name>/` with `FEATURE.md` and `files/`.
 4. Write the code in `files/`:
    - Do not put host-owned files in `files/`. Host changes (routes, initializers, Gemfile) belong in `template.rb`.
@@ -36,9 +36,11 @@ features/<feature_name>/
    - Assume only what `FEATURE.md` lists as requirements (Rails version, database, gems).
 5. Write RSpec specs in `files/spec/` covering the feature's behaviour.
 6. Write `files/features/<feature_name>.md` with front matter `always_on`, `depends_on` (other feature names, `feature_registry` is implied), and `gems`. Write `template.rb` (see below), which also appends `FEATURE_<NAME>` to `features/0-manifest.yml`. See `features/feature_registry/FEATURE.md`. Gate the feature's routes, jobs and entry points on `Features.enabled?(:<feature_name>)`.
-7. Verify by injecting into a scratch copy of a template app under `rails-api/` (never in place): run `bin/rails app:template LOCATION=<path>/features/<feature_name>/template.rb`, then `bin/rails db:migrate` and `bundle exec rspec`. Run the template a second time to confirm it is safe to re-run. Report failures; do not mark the feature done on a failing run.
+7. Verify by injecting into a scratch copy of a template app under `rails-api/` (never in place): run `bin/rails app:template LOCATION=<path>/features/<feature_name>/template.rb`, then `bin/rails db:migrate` and `bundle exec rspec`. Run the template a second time to confirm it is safe to re-run. Report failures; do not mark the feature done on a failing run. CI repeats this verification on the PR.
 8. Complete `FEATURE.md` (below).
 9. Add a row to the "Feature index" table in `features/CONTEXT.md`: feature name, one-line summary, and a link to `<feature_name>/FEATURE.md`. If the feature changes the routing (a new kind of task), update the routing table too. The feature is not done until this row exists.
+
+10. When building from a ticket, open a PR whose description says `Refs #<issue>` (not `Closes`). Then relabel the issue from `ready-for-agent` to `ready-for-human`. Leave the draft in place: the ticket review workflow removes it after injection. See `workflows/features.md`.
 
 ## template.rb
 

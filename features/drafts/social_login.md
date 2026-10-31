@@ -2,6 +2,8 @@
 
 Status: draft
 
+Ticket: [#95](https://github.com/any-container/rails-template/issues/95)
+
 Login with Google or Facebook. A first successful social login registers the user by creating a social identity. Social identities are separate from email identities, because Facebook users may have no email.
 
 ## Requirements
