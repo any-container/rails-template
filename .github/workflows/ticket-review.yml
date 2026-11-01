@@ -93,6 +93,7 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           branch: remove-draft-${{ matrix.draft.name }}
           title: Remove ${{ matrix.draft.name }} draft
+          assignees: thombaynes
           commit-message: Remove ${{ matrix.draft.name }} draft
           body: |
             `${{ matrix.draft.name }}` is injected into every template app in `rails-api/`. Its draft is no longer needed.

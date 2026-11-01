@@ -84,6 +84,7 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           branch: inject-features
           title: Inject features into the template apps
+          assignees: thombaynes
           commit-message: Inject features into the template apps
           add-paths: rails-api
           body: |

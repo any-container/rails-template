@@ -244,6 +244,7 @@ jobs:
           token: ${{ steps.app-token.outputs.token }} # Needs read/write for PRs and repo content
           branch: ${{ inputs.variant }}-${{ needs.setup-rails.outputs.minor }}-latest-changes
           title: ${{ inputs.variant }} changes (Rails ${{ env.RAILS_VERSION }})
+          assignees: thombaynes
 
   # Only variants with Active Record models have a schema.rb to maintain (or-rspec uses Active Record only for Solid Queue)
   active-record-schema-and-annotations:
