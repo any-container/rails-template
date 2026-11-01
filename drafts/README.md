@@ -1,8 +1,8 @@
 # Draft Features
 
-Descriptions of features not yet built. One file per feature: `features/drafts/<feature_name>.md` (snake_case).
+Descriptions of features not yet built. One file per feature: `drafts/<feature_name>.md` (snake_case).
 
-Every draft has a GitHub issue, linked on the `Ticket:` line and labelled per `docs/agents/triage-labels.md` (`ready-for-agent` when the draft has no open questions, otherwise `needs-info`). See [workflows/features.md](../../workflows/features.md).
+Every draft has a GitHub issue, linked on the `Ticket:` line and labelled per `docs/agents/triage-labels.md` (`ready-for-agent` when the draft has no open questions, otherwise `needs-info`). See [workflows/features.md](../workflows/features.md).
 
 Drafts are not listed in the feature index in `features/CONTEXT.md`. They have no `template.rb` or `files/`.
 
