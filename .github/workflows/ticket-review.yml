@@ -55,6 +55,7 @@ jobs:
             name=$(basename "$dir")
             draft="drafts/$name/$name.md"
             [ -f "$draft" ] || continue
+            grep -q '^Status: INJECTED$' "$draft" && continue
             [ -d "features/$name" ] || continue
             ticket=$(grep -m1 -E '^Ticket: \[#[0-9]+\]' "$draft" | grep -oE '[0-9]+' | head -1)
             [ -n "$ticket" ] || { echo "Draft $name has no Ticket line."; continue; }
@@ -69,7 +70,7 @@ jobs:
           done
           echo "drafts=$list" >> $GITHUB_OUTPUT
 
-  remove-injected-drafts:
+  mark-injected-drafts:
     needs: find-injected-drafts
     if: needs.find-injected-drafts.outputs.drafts != '[]'
     runs-on: ubuntu-24.04
@@ -85,17 +86,17 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: Checkout code
         uses: actions/checkout@v7
-      - name: Delete the draft
-        run: git rm -r "drafts/${{ matrix.draft.name }}"
+      - name: Mark the draft INJECTED
+        run: sed -i 's/^Status: .*/Status: INJECTED/' "drafts/${{ matrix.draft.name }}/${{ matrix.draft.name }}.md"
       # Closes #<n> closes the ticket when the PR merges
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ steps.app-token.outputs.token }}
-          branch: remove-draft-${{ matrix.draft.name }}
-          title: Remove ${{ matrix.draft.name }} draft
-          commit-message: Remove ${{ matrix.draft.name }} draft
+          branch: mark-draft-injected-${{ matrix.draft.name }}
+          title: Mark ${{ matrix.draft.name }} draft INJECTED
+          commit-message: Mark ${{ matrix.draft.name }} draft INJECTED
           body: |
-            `${{ matrix.draft.name }}` is injected into every template app in `rails-api/`. Its draft is no longer needed.
+            `${{ matrix.draft.name }}` is injected into every template app in `rails-api/`. Its draft is marked `Status: INJECTED`.
 
             Closes #${{ matrix.draft.ticket }}

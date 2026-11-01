@@ -37,7 +37,7 @@ stateDiagram-v2
 | `build` | The daily agent builds the feature with `new-feature`, opens a PR with `Refs #n`, and relabels the ticket `ready-for-human`. |
 | `merge` | A human merges the PR, and the ticket review workflow relabels the ticket `ready-for-apps`. |
 | `inject` | The feature is applied to every `rails-api/` app in dependency order, in a PR that CI verifies. |
-| `retire` | The ticket review workflow's PR deletes the draft folder and closes the ticket. |
+| `retire` | The ticket review workflow's PR marks the draft `Status: INJECTED` and closes the ticket. The draft folder is kept. |
 
 ## Daily build
 
@@ -57,7 +57,7 @@ If nothing is labelled `ready-for-agent`, it stops. If verification fails, it op
 |-----|--------|
 | `promote-tickets` | A ticket labelled `ready-for-human` whose number appears in the description of a merged PR moves to `ready-for-apps`. |
 | `find-injected-drafts` | A draft counts as injected when `features/<name>/` exists and every `rails-api/<variant>/<minor>-latest` app holds `features/<name>.md`. |
-| `remove-injected-drafts` | Opens a PR deleting each injected draft folder, with `Closes #n` taken from the draft's `Ticket:` line. Merging the PR closes the ticket. |
+| `mark-injected-drafts` | Skips drafts already marked `INJECTED`. Opens a PR setting `Status: INJECTED` in each other injected draft, with `Closes #n` taken from the draft's `Ticket:` line. Merging the PR closes the ticket. |
 
 Requires the `ready-for-apps` label (the workflow creates it if absent) and the `APP_ID` / `APP_PRIVATE_KEY` credentials that `fresh-api-app.yml` already uses, so the PRs it opens trigger CI.
 

@@ -9,6 +9,8 @@ Descriptions of features not yet built. One folder per feature: `drafts/<feature
 
 Every draft has a GitHub issue, linked on the `Ticket:` line and labelled per `docs/agents/triage-labels.md` (`ready-for-agent` when the draft has no open questions, otherwise `needs-info`). See [workflows/features.md](../workflows/features.md).
 
+A draft's `Status:` line is `draft` until its feature is injected into every template app, then `INJECTED`. Injected drafts are kept.
+
 Drafts are not listed in the feature index in `features/CONTEXT.md`. They have no `template.rb` or `files/`.
 
 ## Draft template
