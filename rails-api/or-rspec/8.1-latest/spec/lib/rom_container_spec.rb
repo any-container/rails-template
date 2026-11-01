@@ -23,6 +23,14 @@ RSpec.describe RomContainer do
   end
 
   describe ".reset!" do
+    # Later specs share the Factory built on the original container.
+    around do |example|
+      original = described_class.instance
+      example.run
+    ensure
+      described_class.instance_variable_set(:@instance, original)
+    end
+
     it "makes the next .instance call build a new container" do
       before = described_class.instance
 
