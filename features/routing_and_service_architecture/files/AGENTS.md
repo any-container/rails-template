@@ -19,6 +19,8 @@ Read those files before making changes in that part of the codebase.
 | `db/rom` | `db/rom/STANDARDS.md` |
 | `spec` | `spec/STANDARDS.md` |
 
+Prefer composition over inheritance. Shared code is an `ActiveSupport::Concern` in a `concerns/` folder in the same directory as the code that uses it, unless directed otherwise.
+
 Where a standard says to ask the user, ask before proceeding.
 
 ## Ruby style
