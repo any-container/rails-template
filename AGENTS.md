@@ -32,3 +32,7 @@ Default five-label vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, 
 ### Domain docs
 
 Single-context: one `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
+## Hooks
+
+`.claude/settings.json` runs a PostToolUse hook after any Edit or Write of `.github/workflows/*.yml`. It parses the file as YAML and reports a syntax error immediately. Fix the error before continuing. Outside Claude Code, run `ruby -ryaml -e 'YAML.load_file(ARGV[0])' <file>` after editing a workflow.
