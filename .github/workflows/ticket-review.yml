@@ -51,7 +51,7 @@ jobs:
         id: scan
         run: |
           list='[]'
-          for draft in features/drafts/*.md; do
+          for draft in drafts/*.md; do
             name=$(basename "$draft" .md)
             [ "$name" = README ] && continue
             [ -d "features/$name" ] || continue
@@ -85,7 +85,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
       - name: Delete the draft
-        run: git rm "features/drafts/${{ matrix.draft.name }}.md"
+        run: git rm "drafts/${{ matrix.draft.name }}.md"
       # Closes #<n> closes the ticket when the PR merges
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8

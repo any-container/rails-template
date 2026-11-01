@@ -29,7 +29,7 @@ features/<feature_name>/
 
 ## Steps
 
-1. If building from a ticket, read the issue and its linked `features/drafts/<feature_name>.md`. Read `features/CONTEXT.md` and list `features/` to check for an existing or overlapping feature. Extend rather than duplicate.
+1. If building from a ticket, read the issue and its linked `drafts/<feature_name>.md`. Read `features/CONTEXT.md` and list `features/` to check for an existing or overlapping feature. Extend rather than duplicate.
 2. Confirm the feature name and scope with the user if either is ambiguous. When building unattended from a ticket, the draft sets both.
 3. Create `features/<feature_name>/` with `FEATURE.md` and `files/`.
 4. Write the code in `files/`:
