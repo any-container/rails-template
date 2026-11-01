@@ -9,3 +9,7 @@ ROM relations (`rom-sql`). One per table.
 - Reusable queries are named methods on the relation (e.g. `by_status`).
 - Query composition only. No business logic.
 - Only repos use relations.
+- Name the relation class for the table, plural (`Users` for `users`). Declare every column as an `attribute` with a `ROM::SQL::Types` type. UUID columns use `Types::PG::UUID`, timestamps use `Types::Time`.
+- Declare `primary_key`.
+- Declare the foreign key side with `belongs_to ... foreign_key:` and the other side with `has_many ... foreign_key:`. Name the association for the role (`as: :owner`).
+- Case-insensitive lookups use the same expression as the index (`lower(email)`).
