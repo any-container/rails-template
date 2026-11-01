@@ -12,10 +12,8 @@ Side projects need low hosting cost with a simple, repeatable deploy. One small 
 See [RAILS_CONTEXT.md](RAILS_CONTEXT.md) for Rails and Ruby specifics.
 
 ## Requirements
-- Database: PostgreSQL, DigitalOcean Managed Databases, reached via `DATABASE_URL`
+- Database: PostgreSQL, reached via `DATABASE_URL`
 - Deployer: Kamal 2.x
-- Features: `digitalocean_infrastructure` (draft, not yet written) provisions the Droplet, SSH key, firewall, and managed Postgres cluster, and owns Terraform state, Droplet size, region, and OS updates. This feature takes the Droplet's address, SSH access, and `DATABASE_URL` as inputs.
-- Accounts: DigitalOcean account and API token, container registry (e.g. GitHub Container Registry), a domain name for TLS
 
 ## Scope
 Included:

@@ -61,7 +61,3 @@ Rails and Ruby specifics for [<feature_name>.md](<feature_name>.md).
 ```
 
 Omit any section that does not apply. Everything that names a Rails or Ruby construct goes here, not in the draft.
-
-## Promotion
-
-To build a draft, use the `new-feature` skill with the draft as input. After the feature is built and indexed in `features/CONTEXT.md`, the ticket review workflow opens a PR that deletes the draft folder and closes its ticket once the feature is injected into the template apps.
