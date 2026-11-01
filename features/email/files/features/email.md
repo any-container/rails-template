@@ -11,5 +11,5 @@ Shared outbound email. Every feature that sends mail builds its mailer on `Appli
 
 - `ApplicationMailer` sends from `EMAIL_SENDER_ADDRESS`, which has no default outside the test environment. Without it a mailer raises `ApplicationMailer::MissingSenderAddress` and sends nothing.
 - Mail is never delivered in the request cycle. Mailers must be safe to retry.
-- Development writes messages to `tmp/letter_opener/` with `letter_opener`. Production delivery is configured by the host.
+- Delivery settings live in `config/initializers/email.rb`. Development writes messages to `tmp/letter_opener/` with `letter_opener`. Production delivery is configured by the host.
 - Spec helpers in `spec/support/email.rb`: `last_email`, `email_links(mail)`, `first_email_link(mail)`.

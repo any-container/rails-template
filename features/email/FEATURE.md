@@ -22,19 +22,11 @@ The template:
 - Appends `FEATURE_EMAIL: "false"` to `features/0-manifest.yml`.
 - Uncomments `require "action_mailer/railtie"` in `config/application.rb` (the template apps comment it out).
 - Adds `gem "letter_opener", "~> 1.10", group: :development` to the Gemfile.
-- Adds to `config/environments/development.rb`:
-
-      config.action_mailer.delivery_method = :letter_opener
-      config.action_mailer.raise_delivery_errors = false
-      config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
-
-- Adds to `config/environments/test.rb`:
-
-      ENV["EMAIL_SENDER_ADDRESS"] ||= "no-reply@example.com"
-      config.action_mailer.delivery_method = :test
-      config.action_mailer.default_url_options = { host: "www.example.com" }
-
+- Copies `config/initializers/email.rb`, which holds the per-environment delivery settings:
+  - development: `delivery_method = :letter_opener`, `raise_delivery_errors = false`, `default_url_options = { host: "localhost", port: 3000 }`.
+  - test: `ENV["EMAIL_SENDER_ADDRESS"] ||= "no-reply@example.com"`, `delivery_method = :test`, `default_url_options = { host: "www.example.com" }`.
 - Adds `require Rails.root.join("spec/support/email").to_s` to `spec/rails_helper.rb`.
+- Makes no edit to `config/environments/*.rb`.
 - Leaves production untouched: the host configures its delivery provider and `default_url_options`.
 - Runs no migrations. Re-running changes nothing.
 
