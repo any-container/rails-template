@@ -6,16 +6,17 @@ Ticket: [#93](https://github.com/any-container/rails-template/issues/93)
 
 Passwordless login. The user enters a username and receives an email containing a secure link. The link goes to a new endpoint that creates a session.
 
+See [RAILS_CONTEXT.md](RAILS_CONTEXT.md) for Rails and Ruby specifics.
+
 ## Requirements
-- Rails: 8.0 or later
 - Database: required
 - Depends on: `session`, `email`
 - Email infrastructure, sender address (`EMAIL_SENDER_ADDRESS`), and the base mailer: provided by `email`.
-- Background jobs: Solid Queue, the default per `app/jobs/STANDARDS.md` (installed by `session`)
+- Background jobs: required (installed by `session`)
 
 ## Email identity table
 
-Table `email_identities`, model `EmailIdentity`. The feature prefix is not applied. `password_login_and_registration` also uses this table, with the identical definition, so either feature may be injected first or alone.
+Table `email_identities`. The feature prefix is not applied. `password_login_and_registration` also uses this table, with the identical definition, so either feature may be injected first or alone.
 
 | Column | Required | Unique |
 |--------|----------|--------|
@@ -31,11 +32,11 @@ Injection rule, shared with `password_login_and_registration`:
 - If `email_identities` does not exist, the template creates it.
 - If it exists and matches the definition exactly, the template skips creating it.
 - If it exists and does not match exactly, the template fails with an error and changes nothing.
-- The same rule applies to the `EmailIdentity` model file.
+- The same rule applies to the identity's model file.
 
 ## Sign-in token table
 
-Table `sign_in_tokens`, model `SignInToken`. The feature prefix is not applied.
+Table `sign_in_tokens`. The feature prefix is not applied.
 
 | Column | Required | Unique | Notes |
 |--------|----------|--------|-------|
@@ -65,7 +66,7 @@ Inputs: username, display email, given name, surname (optional).
 6. The session is started through `session`.
 
 ## Mailer
-- This feature owns the login link mailer and its email template. The mailer inherits from `ApplicationMailer` (provided by `email`).
+- This feature owns the login link mailer and its email template. The mailer inherits from the base mailer provided by `email`.
 - The "from" address and the requirement that it be set come from `email` (`EMAIL_SENDER_ADDRESS`).
 
 ## Request endpoint
@@ -73,7 +74,7 @@ Inputs: username, display email, given name, surname (optional).
 - The response is identical whether or not the username exists, matching the login rule that existence is never revealed. Response time does not distinguish the cases because the lookup, token creation, and mail delivery happen in the job.
 
 ## Job
-- Takes the email identity id. Per `app/jobs/STANDARDS.md`, arguments are ids.
+- Takes the email identity id. Job arguments are ids.
 - Creates the sign-in token inside the job, so the plaintext token is never passed through the queue.
 - Invalidates the identity's earlier unused tokens.
 - Sends the email containing the link.

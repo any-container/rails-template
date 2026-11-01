@@ -6,11 +6,11 @@ Ticket: [#95](https://github.com/any-container/rails-template/issues/95)
 
 Login with Google or Facebook. A first successful social login registers the user by creating a social identity. Social identities are separate from email identities, because Facebook users may have no email.
 
+See [RAILS_CONTEXT.md](RAILS_CONTEXT.md) for Rails and Ruby specifics.
+
 ## Requirements
-- Rails: 8.0 or later
 - Database: required
 - Depends on: `session`
-- Gems: `omniauth`, `omniauth-google-oauth2`, `omniauth-facebook`
 - A Google app and a Facebook app, each registered with its provider, with the client id and client secret supplied as ENV variables:
 
 | ENV variable | Value |
@@ -26,7 +26,7 @@ Login with Google or Facebook. A first successful social login registers the use
 
 ## Social identity table
 
-Table `social_identities`, model `SocialIdentity`. The feature prefix is not applied. One row per provider account.
+Table `social_identities`. The feature prefix is not applied. One row per provider account.
 
 | Column | Required | Unique | Notes |
 |--------|----------|--------|-------|

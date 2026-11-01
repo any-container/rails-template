@@ -4,15 +4,16 @@ Status: draft
 
 Ticket: [#96](https://github.com/any-container/rails-template/issues/96)
 
-Deploys a Rails app to a single DigitalOcean Droplet with Kamal. The Droplet is provisioned by the `digitalocean_infrastructure` feature. Postgres is DigitalOcean Managed Databases, not run on the Droplet.
+Deploys an app to a single DigitalOcean Droplet with Kamal. The Droplet is provisioned by the `digitalocean_infrastructure` feature. Postgres is DigitalOcean Managed Databases, not run on the Droplet.
 
 ## Motivation
-Side projects need low hosting cost with a simple, repeatable deploy. One small Droplet (about $5/month) running the app, plus the smallest DigitalOcean Managed Postgres plan, is cheaper than Heroku or AWS managed stacks, and keeps app and database on one provider and private network. Verify current plan prices before building. Kamal is the Rails default deployer and needs only SSH and Docker. Managed Postgres removes backup, patching, and restore work from the owner.
+Side projects need low hosting cost with a simple, repeatable deploy. One small Droplet (about $5/month) running the app, plus the smallest DigitalOcean Managed Postgres plan, is cheaper than Heroku or AWS managed stacks, and keeps app and database on one provider and private network. Verify current plan prices before building. Kamal needs only SSH and Docker. Managed Postgres removes backup, patching, and restore work from the owner.
+
+See [RAILS_CONTEXT.md](RAILS_CONTEXT.md) for Rails and Ruby specifics.
 
 ## Requirements
-- Rails: 8.0+ (Kamal is bundled with the Rails 8 generator)
 - Database: PostgreSQL, DigitalOcean Managed Databases, reached via `DATABASE_URL`
-- Gems: `kamal`, `~> 2.0`
+- Deployer: Kamal 2.x
 - Features: `digitalocean_infrastructure` (draft, not yet written) provisions the Droplet, SSH key, firewall, and managed Postgres cluster, and owns Terraform state, Droplet size, region, and OS updates. This feature takes the Droplet's address, SSH access, and `DATABASE_URL` as inputs.
 - Accounts: DigitalOcean account and API token, container registry (e.g. GitHub Container Registry), a domain name for TLS
 
@@ -22,7 +23,6 @@ Included:
 - `.kamal/secrets` wired to environment variables, with no secrets committed
 - `.github/` app generation step that verifies `config/deploy.yml` renders (e.g. `kamal config`)
 - Documentation of setup, deploy, rollback, and host patching
-- Compatibility with both `postgres-rspec` and `or-rspec` template variants (`or-rspec` uses Postgres only for Solid Queue)
 
 Excluded:
 - High availability, multiple hosts, load balancers

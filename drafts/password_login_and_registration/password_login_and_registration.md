@@ -6,15 +6,15 @@ Ticket: [#94](https://github.com/any-container/rails-template/issues/94)
 
 Registration with a username and password, and a login that authenticates against them. Identities live in `email_identities`. Passwords live in a separate table.
 
+See [RAILS_CONTEXT.md](RAILS_CONTEXT.md) for Rails and Ruby specifics.
+
 ## Requirements
-- Rails: 8.0 or later
-- Database: PostgreSQL (Active Record)
+- Database: PostgreSQL
 - Depends on: `session`
-- Gems: `bcrypt`
 
 ## Email identity table
 
-Table `email_identities`, model `EmailIdentity`. The feature prefix is not applied. `email_link_login` also uses this table, with the identical definition, so either feature may be injected first or alone.
+Table `email_identities`. The feature prefix is not applied. `email_link_login` also uses this table, with the identical definition, so either feature may be injected first or alone.
 
 | Column | Required | Unique | Notes |
 |--------|----------|--------|-------|
@@ -30,7 +30,7 @@ Injection rule, shared with `email_link_login`:
 - If `email_identities` does not exist, the template creates it.
 - If it exists and matches the definition exactly, the template skips creating it.
 - If it exists and does not match exactly, the template fails with an error and changes nothing.
-- The same rule applies to the `EmailIdentity` model file.
+- The same rule applies to the identity's model file.
 
 ### Email normalization
 
@@ -38,7 +38,7 @@ All addresses are stripped and downcased. For Gmail addresses (`gmail.com`, `goo
 
 ## Email identity password table
 
-Table `email_identity_passwords`, model `EmailIdentityPassword`. The feature prefix is not applied. Created by this feature only.
+Table `email_identity_passwords`. The feature prefix is not applied. Created by this feature only.
 
 | Column | Required | Unique | Notes |
 |--------|----------|--------|-------|
@@ -73,7 +73,7 @@ Inputs: username, password.
 ## Out of scope
 - Social identities. See `social_login`.
 - Email verification after registration. Candidate for a separate feature.
-- Login rate limiting and lockout. The host app handles throttling (for example Rack::Attack or Rails `rate_limit`).
+- Login rate limiting and lockout. The host app handles throttling (for example a rack-level throttle or the framework's rate limiter).
 
 ## Open questions
 - Revisit the `email_identities` table (deferred by the user to later in this session).

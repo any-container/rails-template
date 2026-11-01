@@ -51,9 +51,10 @@ jobs:
         id: scan
         run: |
           list='[]'
-          for draft in drafts/*.md; do
-            name=$(basename "$draft" .md)
-            [ "$name" = README ] && continue
+          for dir in drafts/*/; do
+            name=$(basename "$dir")
+            draft="drafts/$name/$name.md"
+            [ -f "$draft" ] || continue
             [ -d "features/$name" ] || continue
             ticket=$(grep -m1 -E '^Ticket: \[#[0-9]+\]' "$draft" | grep -oE '[0-9]+' | head -1)
             [ -n "$ticket" ] || { echo "Draft $name has no Ticket line."; continue; }
@@ -85,7 +86,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
       - name: Delete the draft
-        run: git rm "drafts/${{ matrix.draft.name }}.md"
+        run: git rm -r "drafts/${{ matrix.draft.name }}"
       # Closes #<n> closes the ticket when the PR merges
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8

@@ -12,7 +12,7 @@ Read `features/CONTEXT.md` for routing. It says where to go for each kind of tas
 
 | Folder | Contents |
 |--------|----------|
-| `drafts/` | Descriptions of features not yet built, one `<feature_name>.md` each, with a linked GitHub issue. See `drafts/README.md`. |
+| `drafts/` | Descriptions of features not yet built, one `<feature_name>/` folder each (`<feature_name>.md` plus `RAILS_CONTEXT.md`), with a linked GitHub issue. See `drafts/README.md`. |
 | `features/` | Injectable Rails features. Each is a folder with `FEATURE.md`, `template.rb`, and `files/`. `CONTEXT.md` routes work and indexes features. |
 | `rails-api/` | Template Rails API apps, one folder per variant (`postgres-rspec` with Postgres and Active Record models, `or-rspec` with Postgres and Active Record only for Solid Queue, no models), then one per Rails minor series, holding its latest patch release (e.g. `8.1-latest`). |
 | `infra/` | Terraform for infrastructure, one folder per stack. No stacks yet; the folder is absent. |
