@@ -1,7 +1,7 @@
 name: "Ticket review"
 # Moves feature tickets along the lifecycle in workflows/features.md.
 # 1. ready-for-human -> ready-for-apps: the ticket is referenced in the description of a merged PR.
-# 2. Drafts already injected into every template app: open a PR that deletes the draft and closes its ticket.
+# 2. Drafts already injected into every template app: open a PR that marks the draft INJECTED and closes its ticket.
 # DRAFT: needs the `ready-for-apps` label created in the repo, and APP_ID / APP_PRIVATE_KEY (as in fresh-api-app).
 on:
   workflow_dispatch:
@@ -87,7 +87,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
       - name: Mark the draft INJECTED
-        run: sed -i 's/^Status: .*/Status: INJECTED/' "drafts/${{ matrix.draft.name }}/${{ matrix.draft.name }}.md"
+        run: |
+          sed -i 's/^Status: .*/Status: INJECTED/' "drafts/${{ matrix.draft.name }}/${{ matrix.draft.name }}.md"
       # Closes #<n> closes the ticket when the PR merges
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
