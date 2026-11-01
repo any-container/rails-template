@@ -4,10 +4,10 @@ Status: draft
 
 Ticket: [#96](https://github.com/any-container/rails-template/issues/96)
 
-Deploys an app to a single DigitalOcean Droplet with Kamal. The Droplet is provisioned by the `digitalocean_infrastructure` feature. Postgres is DigitalOcean Managed Databases, not run on the Droplet.
+Deploys an app to a single host with Kamal. Postgres is a managed database, not run on the host.
 
 ## Motivation
-Side projects need low hosting cost with a simple, repeatable deploy. One small Droplet (about $5/month) running the app, plus the smallest DigitalOcean Managed Postgres plan, is cheaper than Heroku or AWS managed stacks, and keeps app and database on one provider and private network. Verify current plan prices before building. Kamal needs only SSH and Docker. Managed Postgres removes backup, patching, and restore work from the owner.
+Side projects need low hosting cost with a simple, repeatable deploy. One small host running the app, plus the smallest managed Postgres plan, is cheaper than Heroku or AWS managed stacks. Kamal needs only SSH and Docker. Managed Postgres removes backup, patching, and restore work from the owner.
 
 See [RAILS_CONTEXT.md](RAILS_CONTEXT.md) for Rails and Ruby specifics.
 
@@ -28,9 +28,4 @@ Excluded:
 - Staging/production environment splits
 - Monitoring and alerting beyond container health checks
 - CI-driven deploys (candidate follow-up feature)
-- Droplet and database provisioning, Terraform, and Terraform state (see `digitalocean_infrastructure`)
-- Non-DigitalOcean hosting providers
-
-## Open questions
-- What does `digitalocean_infrastructure` hand to this feature (host address, SSH user, key path, `DATABASE_URL`), and in what form?
-- Use the Droplet and database private network (VPC) address in `DATABASE_URL`, with the database trusted-sources list limited to the Droplet?
+- Host and database provisioning, Terraform, and Terraform state
