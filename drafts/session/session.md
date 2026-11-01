@@ -6,11 +6,12 @@ Ticket: [#92](https://github.com/any-container/rails-template/issues/92)
 
 Shared session for every login feature. A successful login of any kind creates the session through this feature. It is keyed by identity type and identity id because identities live in separate tables.
 
+See [RAILS_CONTEXT.md](RAILS_CONTEXT.md) for Rails and Ruby specifics.
+
 ## Requirements
-- Rails: 8.0 or later
-- Cookie middleware enabled in the API template
-- Database: PostgreSQL (Active Record)
-- Gems: `solid_queue`
+- Cookie support enabled
+- Database: PostgreSQL
+- Background job scheduler with recurring jobs
 
 ## Feature order
 
@@ -19,13 +20,13 @@ Shared session for every login feature. A successful login of any kind creates t
 
 ## Behavior
 - The session is stored on the backend in a `sessions` table. The cookie carries only an opaque session token. Only a digest of the token is stored.
-- Interface for login features: start a session for an identity, end the session, and resolve the current identity. Resolving returns the identity record itself (a `SocialIdentity` or an `EmailIdentity`).
+- Interface for login features: start a session for an identity, end the session, and resolve the current identity. Resolving returns the identity record itself (a social identity or an email identity).
 - One concurrent session per identity. Starting a session deletes every other session of that identity, so a login elsewhere ends earlier sessions.
 - Logout endpoint deletes the session row.
 
 ## Sessions table
 
-Table `sessions`, model `Session`. The feature prefix is not applied.
+Table `sessions`. The feature prefix is not applied.
 
 | Column | Required | Unique | Notes |
 |--------|----------|--------|-------|
@@ -53,8 +54,8 @@ Unique index on `(identity_type, identity_id)` enforces one session per identity
 | `SESSION_MAX_AGE_SECONDS` | `86400` (24 hours) | Absolute maximum age from login. |
 
 ## Cleanup
-- A recurring job runs every 5 minutes and deletes expired session rows. It is scheduled with Solid Queue (`config/recurring.yml`), the default scheduler per `app/jobs/STANDARDS.md`.
-- Requires Solid Queue (see Requirements).
+- A recurring job runs every 5 minutes and deletes expired session rows.
+- Requires a background job scheduler (see Requirements).
 
 ## Out of scope
 - Any login mechanism. This is a follow-on feature.

@@ -7,7 +7,7 @@ Whole features for a Rails app, built to be injected into an existing service.
 | Task | Action |
 |------|--------|
 | Add a new feature | Use the `new-feature-V2` skill (`.claude/skills/new-feature-V2/SKILL.md`). |
-| Describe a feature not yet built | Add `drafts/<feature_name>.md` (repo root) and a GitHub ticket linked on its `Ticket:` line. See [../drafts/README.md](../drafts/README.md). |
+| Describe a feature not yet built | Add `drafts/<feature_name>/<feature_name>.md` and `drafts/<feature_name>/RAILS_CONTEXT.md` (repo root) and a GitHub ticket linked on its `Ticket:` line. See [../drafts/README.md](../drafts/README.md). |
 | Pick up the next feature to build | Take the oldest open issue labelled `ready-for-agent` and build its draft with the `new-feature` skill. |
 | Understand the draft-to-injected lifecycle | [../workflows/features.md](../workflows/features.md). |
 
