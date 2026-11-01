@@ -31,19 +31,19 @@ stateDiagram-v2
 
 | Verb | What it does |
 |------|--------------|
-| `draft` | A human writes the draft and opens its ticket; it starts at `needs-info` if the draft has open questions, otherwise `ready-for-agent`. |
+| `draft` | A human writes the draft (`drafts/<name>/<name>.md`, with Rails specifics in `drafts/<name>/RAILS_CONTEXT.md`) and opens its ticket; it starts at `needs-info` if the draft has open questions, otherwise `ready-for-agent`. |
 | `answer` | A human resolves the draft's open questions and relabels the ticket `ready-for-agent`. |
 | `extract` | A human lifts a feature out of an existing Rails code base into `features/<name>/` (`FEATURE.md`, `template.rb`, `files/`), opens a GitHub ticket for it, opens a PR with `Refs #n`, and labels the ticket `ready-for-human`. It enters at the same state as `build`. |
 | `build` | The daily agent builds the feature with `new-feature`, opens a PR with `Refs #n`, and relabels the ticket `ready-for-human`. |
 | `merge` | A human merges the PR, and the ticket review workflow relabels the ticket `ready-for-apps`. |
 | `inject` | The feature is applied to every `rails-api/` app in dependency order, in a PR that CI verifies. |
-| `retire` | The ticket review workflow's PR deletes the draft and closes the ticket. |
+| `retire` | The ticket review workflow's PR deletes the draft folder and closes the ticket. |
 
 ## Daily build
 
 A scheduled task on the Claude account runs every day at 10:43 UTC. It:
 1. Lists open issues labelled `ready-for-agent` and picks the oldest.
-2. Runs the `new-feature` skill with the ticket's draft as input.
+2. Runs the `new-feature` skill with the ticket's draft folder as input.
 3. Opens a PR whose description says `Refs #n`. It uses `Refs`, not `Closes`, so the ticket stays open until the draft is removed.
 4. Changes the ticket from `ready-for-agent` to `ready-for-human`.
 
@@ -57,7 +57,7 @@ If nothing is labelled `ready-for-agent`, it stops. If verification fails, it op
 |-----|--------|
 | `promote-tickets` | A ticket labelled `ready-for-human` whose number appears in the description of a merged PR moves to `ready-for-apps`. |
 | `find-injected-drafts` | A draft counts as injected when `features/<name>/` exists and every `rails-api/<variant>/<minor>-latest` app holds `features/<name>.md`. |
-| `remove-injected-drafts` | Opens a PR deleting each injected draft, with `Closes #n` taken from the draft's `Ticket:` line. Merging the PR closes the ticket. |
+| `remove-injected-drafts` | Opens a PR deleting each injected draft folder, with `Closes #n` taken from the draft's `Ticket:` line. Merging the PR closes the ticket. |
 
 Requires the `ready-for-apps` label (the workflow creates it if absent) and the `APP_ID` / `APP_PRIVATE_KEY` credentials that `fresh-api-app.yml` already uses, so the PRs it opens trigger CI.
 
