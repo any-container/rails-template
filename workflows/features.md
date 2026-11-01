@@ -4,19 +4,22 @@ Status: draft. Tracked in [#90](https://github.com/any-container/rails-template/
 
 ## Lifecycle
 
-A feature moves from a draft to a feature injected in the template apps: draft, build, verify, inject, clean up.
+A feature moves from a draft to a feature injected in the template apps: draft, build, verify, inject, clean up. A feature can also enter the lifecycle by extraction from an existing Rails code base, which skips draft and build.
 
 Every draft has a GitHub ticket, linked on the draft's `Ticket:` line. Each state below is a feature state and a ticket label.
 
 ```mermaid
 stateDiagram-v2
     direction TB
+    state "Rails source<br/>existing code base" as Source
     state "Drafted<br/>ticket: needs-info" as NeedsInfo
     state "Drafted<br/>ticket: ready-for-agent" as ReadyAgent
     state "Built, PR open<br/>ticket: ready-for-human" as ReadyHuman
     state "Merged<br/>ticket: ready-for-apps" as ReadyApps
     state "Injected<br/>ticket: ready-for-apps" as Injected
 
+    [*] --> Source
+    Source --> ReadyHuman: extract - Human
     [*] --> NeedsInfo: draft - Human
     [*] --> ReadyAgent: draft - Human
     NeedsInfo --> ReadyAgent: answer - Human
@@ -30,6 +33,7 @@ stateDiagram-v2
 |------|--------------|
 | `draft` | A human writes the draft and opens its ticket; it starts at `needs-info` if the draft has open questions, otherwise `ready-for-agent`. |
 | `answer` | A human resolves the draft's open questions and relabels the ticket `ready-for-agent`. |
+| `extract` | A human lifts a feature out of an existing Rails code base into `features/<name>/` (`FEATURE.md`, `template.rb`, `files/`), opens a PR, and labels its ticket `ready-for-human`. It enters at the same state as `build`. |
 | `build` | The daily agent builds the feature with `new-feature`, opens a PR with `Refs #n`, and relabels the ticket `ready-for-human`. |
 | `merge` | A human merges the PR, and the ticket review workflow relabels the ticket `ready-for-apps`. |
 | `inject` | The feature is applied to every `rails-api/` app in dependency order, in a PR that CI verifies. |
