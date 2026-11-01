@@ -6,8 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "f=$(jq -r \".tool_input.file_path // empty\"); case \"$f\" in */.github/workflows/*.yml|*/.github/workflows/*.yaml) ruby -ryaml -e 'begin; YAML.load_file(ARGV[0]); rescue Psych::SyntaxError => e; warn \"Invalid YAML in #{ARGV[0]}: #{e.message}\"; exit 2; end' \"$f\";; esac",
-            "statusMessage": "Validating workflow YAML..."
+            "command": "f=$(jq -r \".tool_input.file_path // empty\"); case \"$f\" in */.github/workflows/*.yml|*/.github/workflows/*.yaml) ruby -ryaml -e 'begin; YAML.load_file(ARGV[0]); rescue Psych::SyntaxError => e; warn \"Invalid YAML in #{ARGV[0]}: #{e.message}\"; exit 2; end' \"$f\" || exit 2; if command -v actionlint >/dev/null 2>&1; then actionlint \"$f\" >&2 || exit 2; fi;; esac",
+            "statusMessage": "Validating workflow..."
           }
         ]
       }
