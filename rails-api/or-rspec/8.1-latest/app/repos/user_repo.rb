@@ -1,6 +1,7 @@
 class UserRepo < ROM::Repository[:users]
   include Timestamped
   include GeneratedId
+  include ReaderWriter
 
   struct_namespace Object
 
