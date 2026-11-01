@@ -10,7 +10,6 @@ RSpec only. Pick the spec type by what is being verified.
 - Do not use Capybara.
 - Doubles: always `instance_double`. Never a plain `double`.
 - Never stub the class under test.
-- External HTTP: VCR.
 - No minimum coverage is enforced.
 - Test data: `rom-factory`. Define factories in `spec/support/factories/<name>.rb` and use them as `Factory[:user]` (creates and returns the record), `Factory[:user, first_name: "Ada"]` (override attributes), and `Factory.build(:user)` (not persisted). Unique values use `f.sequence`. Related records use `f.association`. Do not use FactoryBot or fixtures.
 - Do not write specs for factories.
