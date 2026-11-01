@@ -10,12 +10,9 @@ RSpec only. Pick the spec type by what is being verified.
 - Do not use Capybara.
 - Doubles: always `instance_double`. Never a plain `double`.
 - Never stub the class under test.
+- External HTTP: VCR.
 - No minimum coverage is enforced.
-- Test data: `rom-factory`. Define factories in `spec/support/factories/<name>.rb` and use them as `Factory[:user]` (creates and returns the record), `Factory[:user, first_name: "Ada"]` (override attributes), and `Factory.build(:user)` (not persisted). Unique values use `f.sequence`. Related records use `f.association`. Do not use FactoryBot or fixtures.
-- Do not write specs for factories.
-- Set up data with factories. Call a repo's `create` only in the spec for that repo method.
-
-- Each example runs in a transaction that is rolled back (`spec/support/rom.rb`). Pending ROM migrations run once before the suite.
+- Test data: ROM-based builders in `spec/support/builders`. Each builder inserts through the ROM relations and returns the record. Do not use FactoryBot or fixtures.
 
 ## By layer
 
@@ -28,4 +25,5 @@ RSpec only. Pick the spec type by what is being verified.
 
 Not yet defined. Ask the user before choosing a strategy:
 
+- Builder helpers (traits, sequences)
 - Any other part of Rails not listed above

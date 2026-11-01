@@ -8,10 +8,10 @@ Active Record may be installed only to back Solid Queue, Solid Cache, and Solid 
 
 ## Rules
 
-- No `ApplicationRecord`, no `ActiveRecord::Base` subclasses.
+- No `ApplicationRecord`, no `ActiveRecord::Base` subclasses, no `ActiveSupport::Concern` for persistence.
 - Entities carry data and small derived values. No persistence calls, no business workflows (those are services).
 - Enum-like values use explicit values, not implicit ordering.
-- Shared code goes in `app/models/concerns`.
+- There is no `models/concerns` folder.
 
 ## Related
 
