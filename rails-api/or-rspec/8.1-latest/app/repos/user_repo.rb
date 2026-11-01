@@ -1,5 +1,6 @@
 class UserRepo < ROM::Repository[:users]
   include Timestamped
+  include GeneratedId
 
   struct_namespace Object
 
@@ -20,16 +21,13 @@ class UserRepo < ROM::Repository[:users]
   end
 
   def create(attrs)
-    users.command(:create).call(with_create_timestamps(attrs))
+    users.command(:create).call(with_create_timestamps(without_id(attrs)))
   end
 
-  # Returns the updated user, or nil when the id does not exist.
   def update(id, attrs)
-    users.by_pk(id).command(:update).call(with_update_timestamps(attrs))
+    users.by_pk(id).command(:update).call(with_update_timestamps(without_id(attrs)))
   end
 
-  # Returns the deleted user, or nil when the id does not exist.
-  # Raises ROM::SQL::ForeignKeyConstraintError while the user still owns accounts.
   def delete(id)
     users.by_pk(id).command(:delete).call
   end
