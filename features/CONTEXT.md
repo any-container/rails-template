@@ -19,6 +19,7 @@ One row per feature in `features/`. The `new-feature` skill adds a row when it c
 |---------|---------|------|
 | feature_registry | Per-deployment feature toggles. `features/<name>.md` descriptions (dependencies, gems), `features/0-manifest.yml` loaded into ENV at boot, `Features.enabled?`. Inject before every other feature. | [feature_registry/FEATURE.md](feature_registry/FEATURE.md) |
 | routing_and_service_architecture | V2. `AGENTS.md` routing (plus symlinks for other agent tools) and per-folder `STANDARDS.md` coding conventions for `app/` and `db/rom` (ROM, services, Jbuilder). | [routing_and_service_architecture/FEATURE.md](routing_and_service_architecture/FEATURE.md) |
+| email | Shared outbound email. `ApplicationMailer` (sender from `EMAIL_SENDER_ADDRESS`), async delivery, `letter_opener` in development, test delivery config and spec helpers (`last_email`, `email_links`, `first_email_link`). Inject after `feature_registry`. | [email/FEATURE.md](email/FEATURE.md) |
 
 ## Versioning
 
