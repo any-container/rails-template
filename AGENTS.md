@@ -18,6 +18,10 @@ Read `features/CONTEXT.md` for routing. It says where to go for each kind of tas
 | `.github/` | GitHub Actions workflows: app generation, Active Record schema and annotations, infra creation, tests. |
 | `.claude/` | Claude Code skills, including `new-feature`. |
 
+## Pull requests
+
+Assign every pull request you open to the user who requested the work.
+
 ## Agent skills
 
 ### Issue tracker
