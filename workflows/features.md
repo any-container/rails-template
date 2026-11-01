@@ -33,7 +33,7 @@ stateDiagram-v2
 |------|--------------|
 | `draft` | A human writes the draft and opens its ticket; it starts at `needs-info` if the draft has open questions, otherwise `ready-for-agent`. |
 | `answer` | A human resolves the draft's open questions and relabels the ticket `ready-for-agent`. |
-| `extract` | A human lifts a feature out of an existing Rails code base into `features/<name>/` (`FEATURE.md`, `template.rb`, `files/`), opens a PR, and labels its ticket `ready-for-human`. It enters at the same state as `build`. |
+| `extract` | A human lifts a feature out of an existing Rails code base into `features/<name>/` (`FEATURE.md`, `template.rb`, `files/`), opens a GitHub ticket for it, opens a PR with `Refs #n`, and labels the ticket `ready-for-human`. It enters at the same state as `build`. |
 | `build` | The daily agent builds the feature with `new-feature`, opens a PR with `Refs #n`, and relabels the ticket `ready-for-human`. |
 | `merge` | A human merges the PR, and the ticket review workflow relabels the ticket `ready-for-apps`. |
 | `inject` | The feature is applied to every `rails-api/` app in dependency order, in a PR that CI verifies. |
