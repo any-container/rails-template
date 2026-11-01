@@ -14,7 +14,6 @@
 - Set `on_delete` explicitly on every foreign key. Default to `:restrict`.
 - Foreign keys to another table's id use `type: :uuid`.
 - Name foreign key columns for the role, not the table (e.g. `owner_id`, not `user_id`, when the user is an owner).
-- Unique email columns use a unique index on `lower(email)`.
 - Do not edit a migration that has run in any shared environment. Add a new one.
 
 ## Column formats
@@ -27,7 +26,7 @@
 
 All date and time attributes are `timestamptz` (stored as UTC). Never `timestamp` without time zone.
 
-`updated_at` has no database trigger. The app must set it on every update. How is not yet defined; ask the user.
+There is no database trigger. Repos set both timestamps with the shared concern `app/repos/concerns/timestamped.rb`.
 
 ## Related
 

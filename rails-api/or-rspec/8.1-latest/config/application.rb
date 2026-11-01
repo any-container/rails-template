@@ -28,6 +28,9 @@ module OrRspec
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
 
+    # Shared code lives in a concerns/ folder beside the code that uses it.
+    config.autoload_paths += Rails.root.glob("app/*/concerns").map(&:to_s)
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files

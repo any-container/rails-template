@@ -3,7 +3,7 @@
 module Timestamped
   extend ActiveSupport::Concern
 
-  PROTECTED_ATTRIBUTES = %i[id created_at updated_at].freeze
+  PROTECTED_ATTRIBUTES = %i[created_at updated_at].freeze
 
   private
 

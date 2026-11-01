@@ -22,11 +22,17 @@ RSpec.describe UserRepo do
       expect(user.created_at).to be_within(5).of(Time.now.utc)
     end
 
-    it "ignores id and timestamps given by the caller" do
-      user = repo.create(attrs.merge(id: "x", created_at: Time.at(0), updated_at: Time.at(0)))
+    it "ignores timestamps given by the caller" do
+      user = repo.create(attrs.merge(created_at: Time.at(0), updated_at: Time.at(0)))
 
-      expect(user.id).not_to eq("x")
       expect(user.created_at).to be > Time.at(0)
+      expect(user.updated_at).to be > Time.at(0)
+    end
+
+    it "ignores an id given by the caller" do
+      given = SecureRandom.uuid
+
+      expect(repo.create(attrs.merge(id: given)).id).not_to eq(given)
     end
 
     it "rejects an email that differs only by case" do
@@ -75,6 +81,10 @@ RSpec.describe UserRepo do
       expect(updated.first_name).to eq("Grace")
       expect(updated.created_at).to eq(user.created_at)
       expect(updated.updated_at).to be > user.updated_at
+    end
+
+    it "ignores an id given by the caller" do
+      expect(repo.update(user.id, id: SecureRandom.uuid).id).to eq(user.id)
     end
 
     it "returns nil for an unknown id" do

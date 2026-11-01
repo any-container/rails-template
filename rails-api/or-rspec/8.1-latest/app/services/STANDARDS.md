@@ -7,6 +7,7 @@ One service per use case. Controllers and jobs call services; services call repo
 - One public method: `.call` (class-level, delegating to an instance `#call`).
 - Return a Result object (success or failure). Do not raise for expected failures.
 - Verb-named classes, namespaced by domain, e.g. `Orders::Place`.
+- Shared code goes in `app/services/concerns`.
 - Inject dependencies (repos, other services) through `initialize`, with defaults.
 
 ## Repo overlap
