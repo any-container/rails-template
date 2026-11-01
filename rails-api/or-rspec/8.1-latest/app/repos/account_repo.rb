@@ -1,6 +1,7 @@
 class AccountRepo < ROM::Repository[:accounts]
   include Timestamped
   include GeneratedId
+  include ReaderWriter
 
   class OwnerNotFound < StandardError; end
 

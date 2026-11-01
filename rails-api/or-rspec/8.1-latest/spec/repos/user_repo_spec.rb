@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe UserRepo do
-  subject(:repo) { described_class.new(RomContainer.instance) }
+  subject(:repo) { described_class.writer }
 
   let(:attrs) { {first_name: "Ada", last_name: "Lovelace", email: "ada@example.com"} }
 
@@ -105,7 +105,7 @@ RSpec.describe UserRepo do
     end
 
     it "refuses to delete a user who owns an account" do
-      AccountRepo.new(RomContainer.instance).create(name: "Acme", owner_id: user.id)
+      AccountRepo.writer.create(name: "Acme", owner_id: user.id)
 
       expect { repo.delete(user.id) }.to raise_error(ROM::SQL::ForeignKeyConstraintError)
     end

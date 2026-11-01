@@ -1,9 +1,9 @@
 require "rails_helper"
 
 RSpec.describe AccountRepo do
-  subject(:repo) { described_class.new(RomContainer.instance) }
+  subject(:repo) { described_class.writer }
 
-  let(:owner) { UserRepo.new(RomContainer.instance).create(first_name: "Ada", last_name: "Lovelace", email: "ada@example.com") }
+  let(:owner) { UserRepo.writer.create(first_name: "Ada", last_name: "Lovelace", email: "ada@example.com") }
 
   describe "#create" do
     it "returns an Account for an existing owner" do
@@ -47,7 +47,7 @@ RSpec.describe AccountRepo do
     end
 
     it "lists only the accounts of the given owner" do
-      other = UserRepo.new(RomContainer.instance).create(first_name: "Grace", last_name: "Hopper", email: "grace@example.com")
+      other = UserRepo.writer.create(first_name: "Grace", last_name: "Hopper", email: "grace@example.com")
       repo.create(name: "Other", owner_id: other.id)
 
       expect(repo.for_owner(owner.id)).to eq([account])
