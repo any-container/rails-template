@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe AccountRepo do
   subject(:repo) { described_class.writer }
 
-  let(:owner) { UserRepo.writer.create(first_name: "Ada", last_name: "Lovelace", email: "ada@example.com") }
+  let(:owner) { Factory[:user] }
 
   describe "#create" do
     it "returns an Account for an existing owner" do
@@ -28,10 +28,10 @@ RSpec.describe AccountRepo do
   end
 
   describe "#find, #find!, #all, #for_owner" do
-    let!(:account) { repo.create(name: "Acme", owner_id: owner.id) }
+    let!(:account) { Factory[:account, owner_id: owner.id] }
 
     it "finds by id" do
-      expect(repo.find(account.id)).to eq(account)
+      expect(repo.find(account.id)).to have_attributes(id: account.id, name: account.name, owner_id: owner.id)
     end
 
     it "returns nil for an unknown id" do
@@ -43,19 +43,18 @@ RSpec.describe AccountRepo do
     end
 
     it "lists all accounts" do
-      expect(repo.all).to eq([account])
+      expect(repo.all.map(&:id)).to eq([account.id])
     end
 
     it "lists only the accounts of the given owner" do
-      other = UserRepo.writer.create(first_name: "Grace", last_name: "Hopper", email: "grace@example.com")
-      repo.create(name: "Other", owner_id: other.id)
+      Factory[:account]
 
-      expect(repo.for_owner(owner.id)).to eq([account])
+      expect(repo.for_owner(owner.id).map(&:id)).to eq([account.id])
     end
   end
 
   describe "#update" do
-    let!(:account) { repo.create(name: "Acme", owner_id: owner.id) }
+    let!(:account) { Factory[:account, owner_id: owner.id] }
 
     it "changes the attributes and moves updated_at forward" do
       updated = repo.update(account.id, name: "Acme Inc", created_at: Time.at(0))
@@ -76,10 +75,10 @@ RSpec.describe AccountRepo do
   end
 
   describe "#delete" do
-    let!(:account) { repo.create(name: "Acme", owner_id: owner.id) }
+    let!(:account) { Factory[:account, owner_id: owner.id] }
 
     it "deletes and returns the account" do
-      expect(repo.delete(account.id)).to eq(account)
+      expect(repo.delete(account.id).id).to eq(account.id)
       expect(repo.find(account.id)).to be_nil
     end
 
