@@ -27,16 +27,16 @@ Confirm all three with the user before writing anything:
 
 ## Versioning
 
-- The current version of each feature or skill lives in `rails-template`. Superseded versions live in the `any-catalog` repo, mounted in `rails-template` as the git submodule `archive/`.
+- The current version of each feature or skill lives in `rails-template`. Superseded versions live in the `any-catalog` repo. `any-catalog` mounts `rails-template` as the git submodule `rails-template/`, pinned to a commit that holds the version being archived.
 - Archive layout in `any-catalog`: `v<N>/<original path>`, for example `v1/.claude/skills/new-feature/SKILL.md`.
 - Each versioned `FEATURE.md` or `SKILL.md` states its version in its first sentence and names the archive path of the previous version.
 
 To supersede version N with N+1:
 1. Copy the current files into `any-catalog` under `v<N>/`. Open a PR there.
-2. After it merges with a merge commit, move the `archive/` submodule pointer in `rails-template` to the merged commit.
-3. Replace the current version in `rails-template`, in a separate PR from the archive pointer change.
+2. In `any-catalog`, move the `rails-template/` submodule pointer to the `rails-template` commit that still holds version N, in the same PR.
+3. After that PR merges, replace the current version in `rails-template` in a separate PR.
 
-Never push to `any-catalog` or change the submodule pointer without the user's confirmation.
+Never push to `any-catalog` or change its submodule pointer without the user's confirmation.
 
 ## Rules
 

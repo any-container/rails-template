@@ -5,7 +5,7 @@ description: Version 2 of the new-feature skill: build a new injectable Rails fe
 
 # New Feature (V2)
 
-This is version 2 of the new-feature skill; version 1 is archived in `archive/v1/.claude/skills/new-feature/`.
+This is version 2 of the new-feature skill; version 1 is archived in the `any-catalog` repo at `v1/.claude/skills/new-feature/`.
 
 A feature is a self-contained, whole slice of behaviour (models, migrations, controllers, routes, jobs, specs) that can be injected into any Rails service.
 
