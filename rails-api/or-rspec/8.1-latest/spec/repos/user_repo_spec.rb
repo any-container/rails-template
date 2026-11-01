@@ -36,7 +36,7 @@ RSpec.describe UserRepo do
     end
 
     it "rejects an email that differs only by case" do
-      repo.create(attrs)
+      Factory[:user, email: "ada@example.com"]
 
       expect { repo.create(attrs.merge(email: "ADA@example.com")) }
         .to raise_error(ROM::SQL::UniqueConstraintError)
@@ -44,7 +44,7 @@ RSpec.describe UserRepo do
   end
 
   describe "#find, #find!, #find_by_email" do
-    let!(:user) { repo.create(attrs) }
+    let!(:user) { Factory[:user, email: "ada@example.com"] }
 
     it "finds by id" do
       expect(repo.find(user.id)).to eq(user)
@@ -65,15 +65,15 @@ RSpec.describe UserRepo do
 
   describe "#all" do
     it "returns users oldest first" do
-      first = repo.create(attrs)
-      second = repo.create(attrs.merge(email: "grace@example.com"))
+      first = Factory[:user]
+      second = Factory[:user]
 
       expect(repo.all.map(&:id)).to eq([first.id, second.id])
     end
   end
 
   describe "#update" do
-    let!(:user) { repo.create(attrs) }
+    let!(:user) { Factory[:user, email: "ada@example.com"] }
 
     it "changes the attributes and moves updated_at forward" do
       updated = repo.update(user.id, first_name: "Grace", created_at: Time.at(0))
@@ -93,7 +93,7 @@ RSpec.describe UserRepo do
   end
 
   describe "#delete" do
-    let!(:user) { repo.create(attrs) }
+    let!(:user) { Factory[:user, email: "ada@example.com"] }
 
     it "deletes and returns the user" do
       expect(repo.delete(user.id)).to eq(user)
@@ -105,7 +105,7 @@ RSpec.describe UserRepo do
     end
 
     it "refuses to delete a user who owns an account" do
-      AccountRepo.writer.create(name: "Acme", owner_id: user.id)
+      Factory[:account, owner_id: user.id]
 
       expect { repo.delete(user.id) }.to raise_error(ROM::SQL::ForeignKeyConstraintError)
     end
