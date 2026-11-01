@@ -13,6 +13,7 @@ RSpec only. Pick the spec type by what is being verified.
 - External HTTP: VCR.
 - No minimum coverage is enforced.
 - Test data: `rom-factory`. Define factories in `spec/support/factories/<name>.rb` and use them as `Factory[:user]` (creates and returns the record), `Factory[:user, first_name: "Ada"]` (override attributes), and `Factory.build(:user)` (not persisted). Unique values use `f.sequence`. Related records use `f.association`. Do not use FactoryBot or fixtures.
+- Do not write specs for factories.
 - Set up data with factories. Call a repo's `create` only in the spec for that repo method.
 
 - Each example runs in a transaction that is rolled back (`spec/support/rom.rb`). Pending ROM migrations run once before the suite.
