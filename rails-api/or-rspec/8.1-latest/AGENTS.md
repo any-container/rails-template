@@ -2,7 +2,7 @@
 
 ## Standards
 
-Every folder in `app/`, and `spec/`, has a `STANDARDS.md` with the best practices for that part of the codebase.
+Every folder in `app/`, plus `db/rom` and `spec/`, has a `STANDARDS.md` with the best practices for that part of the codebase.
 
 Read those files before making changes in that part of the codebase.
 
@@ -19,6 +19,9 @@ Read those files before making changes in that part of the codebase.
 | `db/rom` | `db/rom/STANDARDS.md` |
 | `spec` | `spec/STANDARDS.md` |
 
-Prefer composition over inheritance. Shared code is an `ActiveSupport::Concern` in a `concerns/` folder in the same directory as the code that uses it, unless directed otherwise.
-
 Where a standard says to ask the user, ask before proceeding.
+
+## Ruby style
+
+- Hash keys: use symbols (`key: value`), not hash rockets (`:key => value`).
+- Exception: ENV keys must be strings. Keep symbols in app code and convert at the ENV boundary with `.to_s`, e.g. `ENV[name.to_s]`.
