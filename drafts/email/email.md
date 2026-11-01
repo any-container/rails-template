@@ -13,11 +13,6 @@ See [RAILS_CONTEXT.md](RAILS_CONTEXT.md) for Rails and Ruby specifics.
 - Sender address: required, supplied as the ENV variable `EMAIL_SENDER_ADDRESS`.
 - Background jobs: required
 
-## Feature order
-
-1. `email` (this draft).
-2. `email_link_login`: depends on this feature.
-
 ## Behavior
 - Provides a base mailer, the base class for every mailer in the app. Its "from" address is read from `EMAIL_SENDER_ADDRESS`.
 - `EMAIL_SENDER_ADDRESS` has no default in development and production. Mailers built on the base mailer do not send without it. The test environment sets a default (see Test environment).
@@ -34,7 +29,7 @@ See [RAILS_CONTEXT.md](RAILS_CONTEXT.md) for Rails and Ruby specifics.
   - `first_email_link(mail)`: the first of those links. Features such as `email_link_login` use it to read the token link.
 
 ## Development environment
-- Messages are written to a local directory and not sent. The browser launch is not relied on.
+- Optional: messages are written to a local directory and not sent. The browser launch is not relied on.
 - Production delivery is untouched. The host configures its provider.
 
 ## Configuration
