@@ -24,7 +24,7 @@ end
 
 def front_matter(text)
   m = text.match(/\A---\s*\n(.*?)\n---\s*(\n|\z)/m) or return nil
-  data = YAML.safe_load(m[1], permitted_classes: [], aliases: false)
+  data = YAML.safe_load(m[1], permitted_classes: [Time, Date], aliases: false)
   data.is_a?(Hash) ? data : nil
 end
 
