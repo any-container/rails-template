@@ -1,3 +1,13 @@
+---
+type: Layer
+title: Feature Registry
+description: Per-deployment feature toggles loaded into ENV at boot.
+tags: [feature]
+layer: feature_registry
+generated: { by: process:claude-code, at: 2026-11-05T00:00:00Z }
+status: stable
+---
+
 # Feature Registry
 
 Tracks which features are built into the app and which are switched on in this deployment. Features are toggled per deployment through ENV variables; the static default for each lives in `features/0-manifest.yml`. Every other feature depends on this one and must be injected after it.

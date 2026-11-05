@@ -3,8 +3,8 @@
 #
 #   ruby foundry/register_layer.rb [SHA ...]   (default: HEAD; SHAs are registered in the order given)
 #
-# Reads YAML front matter from every file the commit touches under features/.
-# Keys: name (required), parents (names), siblings (names). Names resolve to the
+# Reads OKF (Open Knowledge Format v0.2) front matter from every file the commit touches under features/.
+# A layer file has `type: Layer`. Layer keys: layer (name, required), parents (names), siblings (names). Names resolve to the
 # newest registered layer with that name. A commit with no front matter is skipped.
 # Already-registered commits are skipped. Exit 0 = all registered or skipped, 1 = first failure
 # (later SHAs are not processed). Prints one result line per commit.
@@ -42,13 +42,13 @@ def register(db, sha)
   metas = files.filter_map do |f|
     text = git("show", "#{sha}:#{f}") rescue next
     fm = front_matter(text)
-    [f, fm] if fm && fm.key?("name")
+    [f, fm] if fm && fm["type"] == "Layer" && fm.key?("layer")
   end
 
-  return "SKIPPED: #{sha[0, 7]} has no features/ file with front matter `name`" if metas.empty?
+  return "SKIPPED: #{sha[0, 7]} has no features/ file with `type: Layer` front matter" if metas.empty?
   return "SKIPPED: #{sha[0, 7]} already registered" if db.get_first_value("SELECT 1 FROM layers WHERE id = ?", sha)
 
-  names = metas.map { |_, fm| fm["name"].to_s }.uniq
+  names = metas.map { |_, fm| fm["layer"].to_s }.uniq
   fail!("#{sha[0, 7]}: conflicting layer names #{names.inspect} in one commit") if names.size > 1
 
   wanted = ->(key) { metas.flat_map { |_, fm| Array(fm[key]).map(&:to_s) }.uniq }
