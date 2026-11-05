@@ -1,0 +1,63 @@
+name: "Create layer"
+# Registers the head commit of a PR labelled `layer` in foundry/foundry.sqlite3,
+# commits the updated database to the PR branch, and comments the result.
+# The database commit is pushed with GITHUB_TOKEN, so it does not re-trigger this workflow.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: create-layer-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  create-layer:
+    if: contains(github.event.pull_request.labels.*.name, 'layer') && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+      - run: gem install sqlite3
+      - name: Register layer
+        id: register
+        env:
+          # Head at trigger time. A newer push cancels nothing, so a stale SHA is registered as its own layer.
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set +e
+          result=$(ruby foundry/register_layer.rb "$SHA" 2>&1)
+          status=$?
+          echo "$result"
+          {
+            echo "result<<EOF"
+            echo "$result"
+            echo "EOF"
+            echo "status=$status"
+            echo "short=${SHA:0:7}"
+          } >> "$GITHUB_OUTPUT"
+      - name: Commit database
+        if: steps.register.outputs.status == '0' && startsWith(steps.register.outputs.result, 'REGISTERED')
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add foundry/foundry.sqlite3
+          git commit -m "Register layer ${{ steps.register.outputs.short }} in foundry database"
+          git push
+      - name: Comment result
+        if: always()
+        env:
+          STATUS: ${{ steps.register.outputs.status }}
+          SHORT: ${{ steps.register.outputs.short }}
+          RESULT: ${{ steps.register.outputs.result }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          if [ "$STATUS" = "0" ]; then icon="✅ Success"; else icon="❌ Failure"; fi
+          gh pr comment "$PR" --body "$(printf '%s: layer `%s`\n\n%s' "$icon" "$SHORT" "$RESULT")"
