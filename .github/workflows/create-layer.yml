@@ -18,25 +18,24 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@v1.336.0
         with:
           ruby-version: "3.3"
       - run: gem install sqlite3
       - name: Register layer
         id: register
         env:
-          BASE_REF: ${{ github.event.pull_request.base.ref }}
-          SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set +e
           # Every PR commit, oldest first. Already-registered commits are skipped by the script.
-          shas=$(git rev-list --reverse "origin/$BASE_REF..$SHA")
-          # shellcheck disable=SC2086
-          result=$(ruby foundry/register_layer.rb $shas 2>&1)
+          mapfile -t shas < <(git rev-list --reverse "origin/$PR_BASE_REF..$PR_HEAD_SHA")
+          result=$(ruby foundry/register_layer.rb "${shas[@]}" 2>&1)
           status=$?
           echo "$result"
           {
@@ -44,13 +43,17 @@ jobs:
             echo "$result"
             echo "EOF"
             echo "status=$status"
-            echo "short=${SHA:0:7}"
+            echo "short=${PR_HEAD_SHA:0:7}"
           } >> "$GITHUB_OUTPUT"
       - name: Commit database
         if: steps.register.outputs.status == '0' && contains(steps.register.outputs.result, 'REGISTERED')
+        env:
+          PR_AUTHOR_LOGIN: ${{ github.event.pull_request.user.login }}
+          PR_AUTHOR_ID: ${{ github.event.pull_request.user.id }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Committed as the PR author, using their GitHub noreply address
+          git config user.name "$PR_AUTHOR_LOGIN"
+          git config user.email "${PR_AUTHOR_ID}+${PR_AUTHOR_LOGIN}@users.noreply.github.com"
           git add foundry/foundry.sqlite3
           git commit -m "Register layers up to ${{ steps.register.outputs.short }} in foundry database"
           git push
