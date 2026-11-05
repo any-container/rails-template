@@ -9,6 +9,7 @@
 # Already-registered commits are skipped. Exit 0 = all registered or skipped, 1 = first failure
 # (later SHAs are not processed). Prints one result line per commit.
 require "yaml"
+require "date"
 require "json"
 require "open3"
 require "sqlite3"
