@@ -1,3 +1,14 @@
+---
+type: Layer
+title: Routing and Service Architecture
+description: AGENTS.md routing and per-folder STANDARDS.md conventions for app/ and db/rom.
+tags: [feature]
+layer: routing_and_service_architecture
+parents: [feature_registry]
+generated: { by: process:claude-code, at: 2026-11-05T00:00:00Z }
+status: stable
+---
+
 # Routing and Service Architecture
 
 V2 of the routing and service architecture feature. Agentic routing for an API-only Rails app using RSpec, ROM (`rom-rb` + `rom-sql`) instead of ActiveRecord, service objects, and Jbuilder views. An `AGENTS.md` at the app root tells agents to read the `STANDARDS.md` in each `app/` folder before changing code there.

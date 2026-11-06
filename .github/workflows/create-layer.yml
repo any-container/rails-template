@@ -1,0 +1,82 @@
+name: "Create layer"
+# Registers every commit of a PR labelled `layer` (oldest first) in foundry/foundry.sqlite3,
+# commits the updated database to the PR branch, and comments the result.
+# The database commit is pushed with GITHUB_TOKEN, so it does not re-trigger this workflow.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: create-layer-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  create-layer:
+    if: contains(github.event.pull_request.labels.*.name, 'layer') && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+      # The database commit this workflow pushes must not be processed again
+      - name: Skip our own database commit
+        id: guard
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          subject=$(git log -1 --format=%s "$PR_HEAD_SHA")
+          if [[ "$subject" == "Register layers up to "* ]]; then echo "skip=true" >> "$GITHUB_OUTPUT"; fi
+      - uses: ruby/setup-ruby@v1.336.0
+        if: steps.guard.outputs.skip != 'true'
+        with:
+          ruby-version: "3.3"
+      - run: gem install sqlite3
+        if: steps.guard.outputs.skip != 'true'
+      - name: Register layer
+        id: register
+        if: steps.guard.outputs.skip != 'true'
+        env:
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set +e
+          # Every PR commit, oldest first. Already-registered commits are skipped by the script.
+          mapfile -t shas < <(git rev-list --reverse "origin/$PR_BASE_REF..$PR_HEAD_SHA")
+          result=$(ruby foundry/register_layer.rb "${shas[@]}" 2>&1)
+          status=$?
+          echo "$result"
+          {
+            echo "result<<EOF"
+            echo "$result"
+            echo "EOF"
+            echo "status=$status"
+            # Case-sensitive: the result also contains "already registered" lines
+            if grep -q '^REGISTERED' <<< "$result"; then echo "registered=true"; fi
+            echo "short=${PR_HEAD_SHA:0:7}"
+          } >> "$GITHUB_OUTPUT"
+      - name: Commit database
+        if: steps.register.outputs.status == '0' && steps.register.outputs.registered == 'true'
+        env:
+          PR_AUTHOR_LOGIN: ${{ github.event.pull_request.user.login }}
+          PR_AUTHOR_ID: ${{ github.event.pull_request.user.id }}
+        run: |
+          # Committed as the PR author, using their GitHub noreply address
+          git config user.name "$PR_AUTHOR_LOGIN"
+          git config user.email "${PR_AUTHOR_ID}+${PR_AUTHOR_LOGIN}@users.noreply.github.com"
+          git add foundry/foundry.sqlite3
+          git commit -m "Register layers up to ${{ steps.register.outputs.short }} in foundry database"
+          git push
+      - name: Comment result
+        if: always() && steps.guard.outputs.skip != 'true'
+        env:
+          STATUS: ${{ steps.register.outputs.status }}
+          SHORT: ${{ steps.register.outputs.short }}
+          RESULT: ${{ steps.register.outputs.result }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          if [ "$STATUS" = "0" ]; then icon="✅ Success"; else icon="❌ Failure"; fi
+          gh pr comment "$PR" --body "$(printf '%s: head `%s`\n\n```\n%s\n```' "$icon" "$SHORT" "$RESULT")"
