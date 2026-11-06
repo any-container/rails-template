@@ -1,0 +1,6 @@
+# Static representation of the feature ENV variables for this deployment.
+# config/initializers/00_features.rb loads each entry into ENV at boot.
+# An ENV value already set in the environment wins over the value here.
+# One entry per feature: FEATURE_<NAME in upper case>. Values: "true" or "false".
+# Each entry needs a description file features/<name>.md.
+FEATURE_FEATURE_REGISTRY: "true"
