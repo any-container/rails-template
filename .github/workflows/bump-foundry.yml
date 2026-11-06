@@ -1,0 +1,45 @@
+name: Bump foundry submodule
+
+# After every push to main, move the rails-template pointer in
+# any-container/foundry to the new tip of main and commit it there.
+# Requires the FOUNDRY_PUSH_TOKEN secret: a token with contents:write on
+# any-container/foundry (GITHUB_TOKEN cannot push to another repository).
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bump-foundry
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out foundry
+        uses: actions/checkout@v4
+        with:
+          repository: any-container/foundry
+          ref: main
+          token: ${{ secrets.FOUNDRY_PUSH_TOKEN }}
+
+      - name: Update rails-template submodule to its main
+        run: git submodule update --init --remote implementations/rails-template
+
+      - name: Commit and push the new pointer
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          if git diff --quiet -- implementations/rails-template; then
+            echo "Pointer already current; nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add implementations/rails-template
+          git commit -m "Bump rails-template to ${SOURCE_SHA:0:7}"
+          git push origin HEAD:main
