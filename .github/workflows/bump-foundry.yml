@@ -2,8 +2,9 @@ name: Bump foundry submodule
 
 # After every push to main, move the rails-template pointer in
 # any-container/foundry to the new tip of main and commit it there.
-# Requires the FOUNDRY_PUSH_TOKEN secret: a token with contents:write on
-# any-container/foundry (GITHUB_TOKEN cannot push to another repository).
+# Authenticates as the anycontain-auth-app GitHub App (APP_ID variable and
+# APP_PRIVATE_KEY secret, as in fresh-api-app.yml). The app must be installed
+# on any-container/foundry with contents: write.
 
 on:
   push:
@@ -20,12 +21,21 @@ jobs:
   bump:
     runs-on: ubuntu-latest
     steps:
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: any-container
+          repositories: foundry
+
       - name: Check out foundry
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: any-container/foundry
           ref: main
-          token: ${{ secrets.FOUNDRY_PUSH_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Update rails-template submodule to its main
         run: git submodule update --init --remote implementations/rails-template
