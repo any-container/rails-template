@@ -66,7 +66,7 @@ Requires the `ready-for-apps` label (the workflow creates it if absent) and the 
 A `ready-for-apps` ticket means the feature is merged and tested on its own, and is waiting to be applied to the template apps. `.github/workflows/inject-features.yml` does it:
 
 1. Target apps: every `rails-api/<variant>/<minor>-latest` folder. Variants today: `postgres-rspec`, `or-rspec`.
-2. Order: `.github/scripts/feature_order.rb` puts `feature_registry` first, then each feature after the features in its `depends_on` front matter (`files/features/<name>.md`).
+2. Order: `.github/scripts/feature_order.rb` puts each feature after the features in its `depends_on` front matter (`files/features/<name>.md`).
 3. Per app: `bin/rails app:template LOCATION=features/<name>/template.rb` for each feature in order. Templates are idempotent, so features already present change nothing. A template that hits a conflicting host file fails rather than overwriting it.
 4. The workflow opens a PR with the result and `Refs #n` for each `ready-for-apps` ticket. CI verifies it.
 5. After the merge, each app holds `features/<name>.md`. That file is what the ticket review workflow reads to decide a draft is injected.
