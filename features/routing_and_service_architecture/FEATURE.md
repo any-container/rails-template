@@ -4,7 +4,6 @@ title: Routing and Service Architecture
 description: AGENTS.md routing and per-folder STANDARDS.md conventions for app/ and db/rom.
 tags: [feature]
 layer: routing_and_service_architecture
-parents: [feature_registry]
 generated: { by: process:claude-code, at: 2026-11-05T00:00:00Z }
 status: stable
 ---
