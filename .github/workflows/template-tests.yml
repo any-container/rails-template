@@ -17,7 +17,7 @@ jobs:
         with:
           filters: |
             templates:
-              - "rails-api/**"
+              - "rails-apps/**"
               - ".github/workflows/template-tests.yml"
   test:
     needs: changes
@@ -28,8 +28,8 @@ jobs:
       fail-fast: false
       matrix:
         template:
-          - rails-api/postgres-rspec/8.1-latest
-          - rails-api/or-rspec/8.1-latest
+          - rails-apps/postgres-rspec/8.1-latest
+          - rails-apps/or-rspec/8.1-latest
     defaults:
       run:
         working-directory: ${{ matrix.template }}

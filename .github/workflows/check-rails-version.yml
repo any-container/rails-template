@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
-      # For each variant (folder in rails-api/) and each minor series that has a <major.minor>-latest folder,
+      # For each variant (folder in rails-apps/) and each minor series that has a <major.minor>-latest folder,
       # plus the newest stable minor on rubygems, find the newest stable patch and compare it with the
       # built Rails version
       - name: Compare latest Rails patch of each minor series with the built apps
@@ -30,7 +30,7 @@ jobs:
           fi
           newest_minor=$(echo "$all" | sort -V | tail -1 | cut -d. -f1,2)
           updates=()
-          for variant_dir in rails-api/*/; do
+          for variant_dir in rails-apps/*/; do
             variant=$(basename "$variant_dir")
             minors=$( (ls "$variant_dir" | sed -n 's/^\([0-9]*\.[0-9]*\)-latest$/\1/p'; echo "$newest_minor") | sort -uV)
             for minor in $minors; do
