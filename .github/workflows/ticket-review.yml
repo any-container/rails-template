@@ -25,7 +25,7 @@ jobs:
     steps:
       - name: Ensure the ready-for-apps label exists
         run: |
-          gh label create ready-for-apps --description "Merged; ready to inject into the rails-api template apps" || true
+          gh label create ready-for-apps --description "Merged; ready to inject into the rails-apps template apps" || true
       # The new-feature agent writes "Refs #<n>" (not "Closes"), so the ticket stays open until the draft is removed
       - name: Move ready-for-human tickets referenced by a merged PR
         run: |
@@ -46,7 +46,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
       # A draft is injected when its feature is built (features/<name>/) and every template app
-      # (rails-api/<variant>/<minor>-latest) holds the feature's registry description (features/<name>.md)
+      # (rails-apps/<variant>/<minor>-latest) holds the feature's registry description (features/<name>.md)
       - name: List drafts whose feature is injected into every template app
         id: scan
         run: |
@@ -60,7 +60,7 @@ jobs:
             ticket=$(grep -m1 -E '^Ticket: \[#[0-9]+\]' "$draft" | grep -oE '[0-9]+' | head -1)
             [ -n "$ticket" ] || { echo "Draft $name has no Ticket line."; continue; }
             injected=true
-            apps=(rails-api/*/*-latest)
+            apps=(rails-apps/*/*-latest)
             for app in "${apps[@]}"; do
               [ -f "$app/features/$name.md" ] || injected=false
             done
@@ -98,6 +98,6 @@ jobs:
           title: Mark ${{ matrix.draft.name }} draft INJECTED
           commit-message: Mark ${{ matrix.draft.name }} draft INJECTED
           body: |
-            `${{ matrix.draft.name }}` is injected into every template app in `rails-api/`. Its draft is marked `Status: INJECTED`.
+            `${{ matrix.draft.name }}` is injected into every template app in `rails-apps/`. Its draft is marked `Status: INJECTED`.
 
             Closes #${{ matrix.draft.ticket }}

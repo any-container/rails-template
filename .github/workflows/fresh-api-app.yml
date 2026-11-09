@@ -1,7 +1,7 @@
 name: "Fresh API Rails App"
 # Runs from check-rails-version when a new Rails release is found, or manually.
-# Builds the given variant (a folder in rails-api/ holding a .railsrc, e.g. postgres-rspec or or-rspec)
-# for the given Rails version into rails-api/<variant>/<major.minor>-latest,
+# Builds the given variant (a folder in rails-apps/ holding a .railsrc, e.g. postgres-rspec or or-rspec)
+# for the given Rails version into rails-apps/<variant>/<major.minor>-latest,
 # replacing the previous patch release of that minor series.
 on:
   workflow_dispatch:
@@ -11,7 +11,7 @@ on:
         required: true
         type: string
       variant:
-        description: "App variant to generate (folder in rails-api/, e.g. postgres-rspec or or-rspec)"
+        description: "App variant to generate (folder in rails-apps/, e.g. postgres-rspec or or-rspec)"
         required: true
         type: string
   workflow_call:
@@ -21,7 +21,7 @@ on:
         required: true
         type: string
       variant:
-        description: "App variant to generate (folder in rails-api/, e.g. postgres-rspec or or-rspec)"
+        description: "App variant to generate (folder in rails-apps/, e.g. postgres-rspec or or-rspec)"
         required: true
         type: string
 permissions:
@@ -66,7 +66,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
-      # Each Rails minor series gets one folder: rails-api/<variant>/<major.minor>-latest
+      # Each Rails minor series gets one folder: rails-apps/<variant>/<major.minor>-latest
       - name: Validate Rails version
         id: rails
         env:
@@ -108,8 +108,8 @@ jobs:
     permissions:
       contents: read
     env:
-      APP_DIR: rails-api/${{ inputs.variant }}/${{ needs.setup-rails.outputs.minor }}-latest
-      RAILSRC: rails-api/${{ inputs.variant }}/.railsrc
+      APP_DIR: rails-apps/${{ inputs.variant }}/${{ needs.setup-rails.outputs.minor }}-latest
+      RAILSRC: rails-apps/${{ inputs.variant }}/.railsrc
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -204,7 +204,7 @@ jobs:
       pr_operation: ${{ steps.cpr.outputs.pull-request-operation }}
     env:
       RAILS_VERSION: ${{ needs.setup-rails.outputs.rails_version }}
-      APP_DIR: rails-api/${{ inputs.variant }}/${{ needs.setup-rails.outputs.minor }}-latest
+      APP_DIR: rails-apps/${{ inputs.variant }}/${{ needs.setup-rails.outputs.minor }}-latest
     steps:
       # Generate the short-lived installation token
       - name: Generate GitHub App Token
@@ -254,5 +254,5 @@ jobs:
     permissions:
       contents: write
     with:
-      directory: rails-api/${{ inputs.variant }}/${{ needs.setup-rails.outputs.minor }}-latest
+      directory: rails-apps/${{ inputs.variant }}/${{ needs.setup-rails.outputs.minor }}-latest
       ref: ${{ needs.create-pr.outputs.pr_branch }}

@@ -1,5 +1,5 @@
 name: "Inject features"
-# Applies every feature in features/ to every template app (rails-api/<variant>/<minor>-latest), in dependency
+# Applies every feature in features/ to every template app (rails-apps/<variant>/<minor>-latest), in dependency
 # order (see .github/scripts/feature_order.rb), and opens a PR with the result. Applying a feature that is
 # already present changes nothing, so this is safe to run at any time.
 # DRAFT: not yet called from fresh-api-app.yml. That workflow regenerates (and so wipes) the apps on each new
@@ -55,7 +55,7 @@ jobs:
       # rather than overwriting host code
       - name: Apply each feature to each app
         run: |
-          for app in rails-api/*/*-latest; do
+          for app in rails-apps/*/*-latest; do
             echo "::group::$app"
             (
               cd "$app"
@@ -85,8 +85,8 @@ jobs:
           branch: inject-features
           title: Inject features into the template apps
           commit-message: Inject features into the template apps
-          add-paths: rails-api
+          add-paths: rails-apps
           body: |
-            Applies every feature in `features/` to each app in `rails-api/`, in dependency order.
+            Applies every feature in `features/` to each app in `rails-apps/`, in dependency order.
 
             ${{ steps.tickets.outputs.refs }}
