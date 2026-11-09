@@ -18,15 +18,3 @@ You are a seasoned software developer defining both best practices for working w
 ### Issue tracker
 
 Issues are tracked in GitHub Issues for `any-container/rails-template` via the `gh` CLI. See `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-Default five-label vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Single-context: one `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
-
-## Hooks
-
-`.claude/settings.json` runs a PostToolUse hook after any Edit or Write of `.github/workflows/*.yml`. It parses the file as YAML and reports a syntax error immediately. If `actionlint` is on PATH, it also runs `actionlint` on the file to check GitHub Actions syntax (expressions, `needs`, step keys). Fix the error before continuing. Outside Claude Code, run `ruby -ryaml -e 'YAML.load_file(ARGV[0])' <file>` after editing a workflow.

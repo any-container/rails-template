@@ -1,8 +1,12 @@
 # Issue tracker: GitHub
 
+REVIEW
+
 Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all operations.
 
 ## Conventions
+
+REVIEW
 
 - **Create an issue**: `gh issue create --title "..." --body "..."`. Use a heredoc for multi-line bodies.
 - **Read an issue**: `gh issue view <number> --comments`, filtering comments by `jq` and also fetching labels.
@@ -14,6 +18,8 @@ Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all o
 Infer the repo from `git remote -v`; `gh` does this automatically when run inside a clone.
 
 ## Pull requests as a triage surface
+
+REVIEW
 
 **PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_
 
@@ -27,13 +33,19 @@ GitHub shares one number space across issues and PRs, so a bare `#42` may be eit
 
 ## When a skill says "publish to the issue tracker"
 
+REVIEW
+
 Create a GitHub issue.
 
 ## When a skill says "fetch the relevant ticket"
 
+REVIEW
+
 Run `gh issue view <number> --comments`.
 
 ## Wayfinding operations
+
+REVIEW
 
 Used by `/wayfinder`. The **map** is a single issue with **child** issues as tickets.
 
