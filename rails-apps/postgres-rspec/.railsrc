@@ -1,9 +1,0 @@
-# App name (first positional argument to `rails new`)
-postgres-rspec
-
-# Options
---database=postgresql
---api
---skip-test
---skip-action-mailbox
---force

@@ -17,22 +17,12 @@ jobs:
         with:
           filters: |
             templates:
-              - "rails-apps/**"
-              - ".github/workflows/template-tests.yml"
+              - "**"
   test:
     needs: changes
     if: needs.changes.outputs.templates == 'true' || github.event_name == 'workflow_dispatch'
-    name: ${{ matrix.template }}
+    name: Tests
     runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        template:
-          - rails-apps/postgres-rspec/8.1-latest
-          - rails-apps/or-rspec/8.1-latest
-    defaults:
-      run:
-        working-directory: ${{ matrix.template }}
     services:
       postgres:
         image: postgres:17
@@ -54,7 +44,6 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          working-directory: ${{ matrix.template }}
           bundler-cache: true
       - name: Set up database
         run: |

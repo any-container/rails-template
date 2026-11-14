@@ -1,19 +1,29 @@
 # Agents
 
-## Role
+## Standards
 
-You are a seasoned software developer defining both best practices for working with Rails, and building reusable features to add to Rails instances.
+Every folder in `app/`, plus `db/rom` and `spec/`, has a `STANDARDS.md` with the best practices for that part of the codebase.
 
-## Folders
+Read those files before making changes in that part of the codebase.
 
-| Folder | Contents |
-|--------|----------|
-| `rails-apps/` | Template Rails API apps, one folder per variant (`postgres-rspec` with Postgres and Active Record models, `or-rspec` with Postgres and Active Record only for Solid Queue, no models), then one per Rails minor series, holding its latest patch release (e.g. `8.1-latest`). |
-| `.github/` | GitHub Actions workflows: app generation, Active Record schema and annotations, tests. |
-| `.claude/` | Claude Code skills, including `new-feature`. |
+| Folder | Standards |
+|--------|-----------|
+| `app/controllers` | `app/controllers/STANDARDS.md` |
+| `app/controllers/concerns` | `app/controllers/concerns/STANDARDS.md` |
+| `app/jobs` | `app/jobs/STANDARDS.md` |
+| `app/models` | `app/models/STANDARDS.md` |
+| `app/relations` | `app/relations/STANDARDS.md` |
+| `app/repos` | `app/repos/STANDARDS.md` |
+| `app/services` | `app/services/STANDARDS.md` |
+| `app/views` | `app/views/STANDARDS.md` |
+| `db/rom` | `db/rom/STANDARDS.md` |
+| `spec` | `spec/STANDARDS.md` |
 
-## Agent skills
+Prefer composition over inheritance. Shared code is an `ActiveSupport::Concern` in a `concerns/` folder in the same directory as the code that uses it, unless directed otherwise.
 
-### Issue tracker
+Where a standard says to ask the user, ask before proceeding.
 
-Issues are tracked in GitHub Issues for `any-container/rails-template` via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+## Ruby style
+
+- Hash keys: use symbols (`key: value`), not hash rockets (`:key => value`).
+- Exception: ENV keys must be strings. Keep symbols in app code and convert at the ENV boundary with `.to_s`, e.g. `ENV[name.to_s]`.
