@@ -1,9 +1,7 @@
 name: "Inject features"
-# Applies every feature in features/ to every template app (rails-apps/<variant>/<minor>-latest), in dependency
+# Applies every feature in features/ to the Rails app at the repo root, in dependency
 # order (see .github/scripts/feature_order.rb), and opens a PR with the result. Applying a feature that is
 # already present changes nothing, so this is safe to run at any time.
-# DRAFT: not yet called from fresh-api-app.yml. That workflow regenerates (and so wipes) the apps on each new
-# Rails patch release, so it must call this one afterwards, or the apps lose their features.
 # Runs after ticket-review so that tickets it just moved to ready-for-apps are picked up.
 on:
   workflow_dispatch:
@@ -53,21 +51,14 @@ jobs:
           ruby .github/scripts/feature_order.rb | tee "$RUNNER_TEMP/order.txt"
       # A template that hits a conflicting host file fails here (stdin is closed, so Thor cannot prompt)
       # rather than overwriting host code
-      - name: Apply each feature to each app
+      - name: Apply each feature to the app
         run: |
-          for app in rails-apps/*/*-latest; do
-            echo "::group::$app"
-            (
-              cd "$app"
-              bundle install
-              bin/rails db:create
-              while read -r feature; do
-                echo "Injecting $feature"
-                bin/rails app:template LOCATION="$GITHUB_WORKSPACE/features/$feature/template.rb" < /dev/null
-              done < "$RUNNER_TEMP/order.txt"
-            )
-            echo "::endgroup::"
-          done
+          bundle install
+          bin/rails db:create
+          while read -r feature; do
+            echo "Injecting $feature"
+            bin/rails app:template LOCATION="$GITHUB_WORKSPACE/features/$feature/template.rb" < /dev/null
+          done < "$RUNNER_TEMP/order.txt"
       - name: List tickets waiting on injection
         id: tickets
         run: |
@@ -77,16 +68,16 @@ jobs:
             echo "$refs"
             echo "EOF"
           } >> $GITHUB_OUTPUT
-      # Only the apps' own files change; logs, tmp and storage are git-ignored
+      # Only the app's own files change; logs, tmp and storage are git-ignored
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ steps.app-token.outputs.token }}
           branch: inject-features
-          title: Inject features into the template apps
-          commit-message: Inject features into the template apps
-          add-paths: rails-apps
+          title: Inject features into the app
+          commit-message: Inject features into the app
+          add-paths: .
           body: |
-            Applies every feature in `features/` to each app in `rails-apps/`, in dependency order.
+            Applies every feature in `features/` to the app, in dependency order.
 
             ${{ steps.tickets.outputs.refs }}

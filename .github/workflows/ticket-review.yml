@@ -1,8 +1,8 @@
 name: "Ticket review"
 # Moves feature tickets along the lifecycle in workflows/features.md.
 # 1. ready-for-human -> ready-for-apps: the ticket is referenced in the description of a merged PR.
-# 2. Drafts already injected into every template app: open a PR that marks the draft INJECTED and closes its ticket.
-# DRAFT: needs the `ready-for-apps` label created in the repo, and APP_ID / APP_PRIVATE_KEY (as in fresh-api-app).
+# 2. Drafts already injected into the app: open a PR that marks the draft INJECTED and closes its ticket.
+# DRAFT: needs the `ready-for-apps` label created in the repo, and APP_ID / APP_PRIVATE_KEY.
 on:
   workflow_dispatch:
   schedule:
@@ -25,7 +25,7 @@ jobs:
     steps:
       - name: Ensure the ready-for-apps label exists
         run: |
-          gh label create ready-for-apps --description "Merged; ready to inject into the rails-apps template apps" || true
+          gh label create ready-for-apps --description "Merged; ready to inject into the app" || true
       # The new-feature agent writes "Refs #<n>" (not "Closes"), so the ticket stays open until the draft is removed
       - name: Move ready-for-human tickets referenced by a merged PR
         run: |
@@ -45,9 +45,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
-      # A draft is injected when its feature is built (features/<name>/) and every template app
-      # (rails-apps/<variant>/<minor>-latest) holds the feature's registry description (features/<name>.md)
-      - name: List drafts whose feature is injected into every template app
+      # A draft is injected when its feature is built (features/<name>/) and the app
+      # holds the feature's registry description (features/<name>.md)
+      - name: List drafts whose feature is injected into the app
         id: scan
         run: |
           list='[]'
@@ -59,12 +59,7 @@ jobs:
             [ -d "features/$name" ] || continue
             ticket=$(grep -m1 -E '^Ticket: \[#[0-9]+\]' "$draft" | grep -oE '[0-9]+' | head -1)
             [ -n "$ticket" ] || { echo "Draft $name has no Ticket line."; continue; }
-            injected=true
-            apps=(rails-apps/*/*-latest)
-            for app in "${apps[@]}"; do
-              [ -f "$app/features/$name.md" ] || injected=false
-            done
-            if [ "$injected" = true ]; then
+            if [ -f "features/$name.md" ]; then
               list=$(jq -c --arg name "$name" --arg ticket "$ticket" '. + [{name: $name, ticket: $ticket}]' <<< "$list")
             fi
           done
@@ -98,6 +93,6 @@ jobs:
           title: Mark ${{ matrix.draft.name }} draft INJECTED
           commit-message: Mark ${{ matrix.draft.name }} draft INJECTED
           body: |
-            `${{ matrix.draft.name }}` is injected into every template app in `rails-apps/`. Its draft is marked `Status: INJECTED`.
+            `${{ matrix.draft.name }}` is injected into the app. Its draft is marked `Status: INJECTED`.
 
             Closes #${{ matrix.draft.ticket }}

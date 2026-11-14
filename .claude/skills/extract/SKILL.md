@@ -22,7 +22,7 @@ Confirm all three with the user before writing anything:
 4. Abstract the content: replace app-specific names, values and paths with template parameters or host edits in `template.rb`. Host-owned files never go in `files/`.
 5. If intent is `new`, build the feature with the `new-feature-V2` skill from step 3 onward, using the abstracted content as input.
 6. If intent is `version`, archive first (see Versioning above), then replace the feature's contents in place and set the new version in `FEATURE.md`.
-7. Verify as `new-feature-V2` step 7 requires: inject into a scratch copy of a `rails-apps/` template app, migrate, run specs, and run the template twice. Do not mark the extraction done on a failing run.
+7. Verify as `new-feature-V2` step 7 requires: inject into a scratch copy of the app, migrate, run specs, and run the template twice. Do not mark the extraction done on a failing run.
 8. Open a GitHub ticket for the feature. Open a PR whose description says `Refs #<ticket>` (not `Closes`). Label the ticket `ready-for-human`.
 
 ## Versioning
