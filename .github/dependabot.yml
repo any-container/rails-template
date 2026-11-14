@@ -6,7 +6,26 @@ updates:
     interval: weekly
   open-pull-requests-limit: 10
   groups:
-    minor-and-patch:
+    # First matching group wins, so keep dev-and-test first.
+    dev-and-test:
+      dependency-type: development
+      update-types:
+      - minor
+      - patch
+    rails:
+      patterns:
+      - "rails"
+      - "rails-*"
+      - "action*"
+      - "active*"
+    solid:
+      patterns:
+      - "solid_*"
+    rom:
+      patterns:
+      - "rom"
+      - "rom-*"
+    production-minor-and-patch:
       update-types:
       - minor
       - patch
