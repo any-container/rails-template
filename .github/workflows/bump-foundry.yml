@@ -3,7 +3,7 @@ name: Bump foundry submodule
 # After every push to main, move the rails-template pointer in
 # any-container/foundry to the new tip of main and commit it there.
 # Authenticates as the anycontain-auth-app GitHub App (APP_ID variable and
-# APP_PRIVATE_KEY secret, as in fresh-api-app.yml). The app must be installed
+# APP_PRIVATE_KEY secret). The app must be installed
 # on any-container/foundry with contents: write.
 
 on:

@@ -38,7 +38,7 @@ features/<feature_name>/
    - Assume only what `FEATURE.md` lists as requirements (Rails version, database, gems).
 5. Write RSpec specs in `files/spec/` covering the feature's behaviour.
 6. Write `files/features/<feature_name>.md` with front matter `always_on`, `depends_on` (other feature names), and `gems`. Write `template.rb` (see below), which also appends `FEATURE_<NAME>` to `features/0-manifest.yml`. See the `layer_registry` layer in the foundry repo (`layers/layer_registry/rails/LAYER.md`). Gate the feature's routes, jobs and entry points on `Features.enabled?(:<feature_name>)`.
-7. Verify by injecting into a scratch copy of a template app under `rails-apps/` (never in place): run `bin/rails app:template LOCATION=<path>/features/<feature_name>/template.rb`, then `bin/rails db:migrate` and `bundle exec rspec`. Run the template a second time to confirm it is safe to re-run. Report failures; do not mark the feature done on a failing run. CI repeats this verification on the PR.
+7. Verify by injecting into a scratch copy of the app (never in place): run `bin/rails app:template LOCATION=<path>/features/<feature_name>/template.rb`, then `bin/rails db:migrate` and `bundle exec rspec`. Run the template a second time to confirm it is safe to re-run. Report failures; do not mark the feature done on a failing run. CI repeats this verification on the PR.
 8. Complete `FEATURE.md` (below).
 9. Add a row to the "Feature index" table in `features/CONTEXT.md`: feature name, one-line summary, and a link to `<feature_name>/FEATURE.md`. If the feature changes the routing (a new kind of task), update the routing table too. The feature is not done until this row exists.
 
