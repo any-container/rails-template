@@ -1,0 +1,5 @@
+# Standard Ruby. See https://github.com/standardrb/standard
+ruby_version: 3.4
+
+ignore:
+  - "db/*_schema.rb"

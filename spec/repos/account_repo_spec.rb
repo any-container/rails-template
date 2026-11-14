@@ -21,7 +21,11 @@ RSpec.describe AccountRepo do
     end
 
     it "does not insert the account when the owner does not exist" do
-      repo.create(name: "Acme", owner_id: SecureRandom.uuid) rescue AccountRepo::OwnerNotFound
+      begin
+        repo.create(name: "Acme", owner_id: SecureRandom.uuid)
+      rescue
+        AccountRepo::OwnerNotFound
+      end
 
       expect(repo.all).to be_empty
     end
