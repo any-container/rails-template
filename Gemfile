@@ -51,7 +51,7 @@ group :development, :test do
   gem "standard", require: false
 end
 
-gem "rspec-rails", "~> 8.0", groups: [:development, :test]
+gem "rspec-rails", "~> 8.1", groups: [:development, :test]
 
 # Test data factories for ROM (traits, sequences, associations).
 gem "rom-factory", "~> 0.14", group: :test
